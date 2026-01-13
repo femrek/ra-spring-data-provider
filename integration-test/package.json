@@ -1,0 +1,25 @@
+{
+  "name": "react-admin-integration-test",
+  "version": "1.0.0",
+  "description": "Integration tests for React Admin with Spring Boot backend",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "install-browsers": "playwright install"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-admin": "^4.16.0",
+    "ra-data-json-server": "^4.16.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.40.0",
+    "vite": "^5.0.0",
+    "@vitejs/plugin-react": "^4.2.1"
+  }
+}

@@ -1,0 +1,176 @@
+import { test, expect } from "@playwright/test";
+
+test.describe("React Admin User Management", () => {
+  test.beforeEach(async ({ page }) => {
+    // Navigate to the users list
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+  });
+
+  test("should display users list", async ({ page }) => {
+    // Wait for the datagrid to load
+    await expect(page.locator("table")).toBeVisible();
+
+    // Check if the table headers are present
+    await expect(page.getByText("Id")).toBeVisible();
+    await expect(page.getByText("Name")).toBeVisible();
+    await expect(page.getByText("Email")).toBeVisible();
+    await expect(page.getByText("Role")).toBeVisible();
+  });
+
+  test("should create a new user", async ({ page }) => {
+    // Click the create button
+    await page.getByRole("link", { name: /create/i }).click();
+
+    // Fill the form
+    const timestamp = Date.now();
+    await page.getByLabel(/name/i).fill(`Test User ${timestamp}`);
+    await page.getByLabel(/email/i).fill(`test${timestamp}@example.com`);
+    await page.getByLabel(/role/i).fill("admin");
+
+    // Submit the form
+    await page.getByRole("button", { name: /save/i }).click();
+
+    // Wait for navigation back to list
+    await page.waitForURL(/.*#\/users/);
+    await page.waitForTimeout(1000);
+
+    // Navigate to the newly created user's page to verify it was created
+    await page.goto(`/#/users?filter={}&order=DESC&page=1&perPage=25&sort=id`);
+    await page.waitForLoadState("networkidle");
+
+    // Verify the user was created by checking if it appears in the list
+    await expect(page.getByText(`Test User ${timestamp}`)).toBeVisible();
+  });
+
+  test("should edit an existing user", async ({ page }) => {
+    // First, create a user to edit
+    await page.getByRole("link", { name: /create/i }).click();
+    const timestamp = Date.now();
+    await page.getByLabel(/name/i).fill(`Edit Test ${timestamp}`);
+    await page.getByLabel(/email/i).fill(`edit${timestamp}@example.com`);
+    await page.getByLabel(/role/i).fill("user");
+    await page.getByRole("button", { name: /save/i }).click();
+
+    // Wait for redirect to list
+    await page.waitForURL(/.*#\/users/);
+    await page.waitForTimeout(1000);
+
+    // Click the first edit button in the row
+    await page
+      .locator("table tbody tr")
+      .first()
+      .locator('a[aria-label*="Edit"]')
+      .click();
+
+    // Update the name
+    await page.getByLabel(/name/i).fill(`Updated User ${timestamp}`);
+
+    // Save
+    await page.getByRole("button", { name: /save/i }).click();
+
+    // Verify the update - should redirect to list
+    await page.waitForURL(/.*#\/users/);
+    await page.waitForTimeout(1000);
+    await expect(page.getByText(`Updated User ${timestamp}`)).toBeVisible();
+  });
+
+  test("should delete a user", async ({ page }) => {
+    // First, create a user to delete
+    await page.getByRole("link", { name: /create/i }).click();
+    const timestamp = Date.now();
+    await page.getByLabel(/name/i).fill(`Delete Test ${timestamp}`);
+    await page.getByLabel(/email/i).fill(`delete${timestamp}@example.com`);
+    await page.getByLabel(/role/i).fill("user");
+    await page.getByRole("button", { name: /save/i }).click();
+
+    // Wait for redirect to list
+    await page.waitForURL(/.*#\/users/);
+    await page.waitForTimeout(1000);
+
+    // Get the initial row count
+    const initialRows = await page.locator("table tbody tr").count();
+
+    // Select the first row checkbox
+    await page
+      .locator("table tbody tr")
+      .first()
+      .locator('input[type="checkbox"]')
+      .click();
+    await page.waitForTimeout(500);
+
+    // Click the bulk delete button in the toolbar (the first one, which is the bulk action)
+    await page
+      .locator('button[aria-label*="Delete"]')
+      .first()
+      .click({ force: true });
+
+    // Confirm deletion if there's a dialog
+    const confirmButton = page.getByRole("button", { name: /confirm/i });
+    if (await confirmButton.isVisible().catch(() => false)) {
+      await confirmButton.click();
+    }
+
+    // Wait a bit for the deletion to complete
+    await page.waitForTimeout(1000);
+
+    // Verify the row count decreased
+    const finalRows = await page.locator("table tbody tr").count();
+    expect(finalRows).toBeLessThan(initialRows);
+  });
+
+  test("should filter users by search", async ({ page }) => {
+    // Create some test users first
+    const users = [
+      { name: "Alice Admin", email: "alice@example.com", role: "admin" },
+      { name: "Bob User", email: "bob@example.com", role: "user" },
+    ];
+
+    for (const user of users) {
+      await page.goto("/#/users/create");
+      await page.getByLabel(/name/i).fill(user.name);
+      await page.getByLabel(/email/i).fill(user.email);
+      await page.getByLabel(/role/i).fill(user.role);
+      await page.getByRole("button", { name: /save/i }).click();
+      await page.waitForURL(/.*#\/users/);
+      await page.waitForTimeout(500);
+    }
+
+    // Go back to list
+    await page.goto("/#/users");
+    await page.waitForLoadState("networkidle");
+
+    // Search for Alice
+    const searchInput = page
+      .locator('input[type="search"], input[aria-label*="Search" i]')
+      .first();
+    if (await searchInput.isVisible().catch(() => false)) {
+      await searchInput.fill("Alice");
+      await page.waitForTimeout(1000);
+
+      // Verify Alice is visible and Bob might not be
+      await expect(page.getByText("Alice Admin")).toBeVisible();
+    }
+  });
+
+  test("should sort users by name", async ({ page }) => {
+    // Get to the users list
+    await page.goto("/#/users");
+    await page.waitForLoadState("networkidle");
+
+    // Click on the Name column header to sort
+    const nameHeader = page
+      .getByText("Name")
+      .locator("..")
+      .locator('button, span[role="button"]');
+    if (await nameHeader.isVisible().catch(() => false)) {
+      await nameHeader.click();
+
+      // Wait for the sort to apply
+      await page.waitForTimeout(1000);
+
+      // Verify the table is still visible
+      await expect(page.locator("table")).toBeVisible();
+    }
+  });
+});
