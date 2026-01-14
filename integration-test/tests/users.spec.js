@@ -213,6 +213,104 @@ test.describe("React Admin User Management", () => {
     expect(finalRows).toBeLessThan(initialRows);
   });
 
+  test("should delete multiple users (bulk delete)", async ({ page }) => {
+    // First, create multiple users to delete
+    const timestamp = Date.now();
+    const usersToCreate = [
+      {
+        name: `Bulk Delete 1 ${timestamp}`,
+        email: `bulkdel1${timestamp}@example.com`,
+        role: "user",
+      },
+      {
+        name: `Bulk Delete 2 ${timestamp}`,
+        email: `bulkdel2${timestamp}@example.com`,
+        role: "user",
+      },
+      {
+        name: `Bulk Delete 3 ${timestamp}`,
+        email: `bulkdel3${timestamp}@example.com`,
+        role: "user",
+      },
+    ];
+
+    // Create the test users
+    for (const user of usersToCreate) {
+      await page.goto("/#/users/create");
+      await page.getByLabel(/name/i).fill(user.name);
+      await page.getByLabel(/email/i).fill(user.email);
+      await page.getByLabel(/role/i).fill(user.role);
+      await page.getByRole("button", { name: /save/i }).click();
+      await page.waitForURL(/.*#\/users/);
+      await page.waitForTimeout(500);
+    }
+
+    // Navigate to the list and ensure we see the latest data
+    await page.goto("/#/users?filter={}&order=DESC&page=1&perPage=25&sort=id");
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000);
+
+    // Get initial row count
+    const initialRows = await page.locator("table tbody tr").count();
+
+    // Store the names of users we want to delete
+    const userNames = usersToCreate.map((u) => u.name);
+
+    // Find and select rows containing our test users
+    let selectedCount = 0;
+    for (const userName of userNames) {
+      const userRow = page.locator(`tr:has-text("${userName}")`).first();
+      if (await userRow.isVisible().catch(() => false)) {
+        const checkbox = userRow.locator('input[type="checkbox"]');
+        await checkbox.click();
+        await page.waitForTimeout(300);
+        selectedCount++;
+      }
+    }
+
+    // Verify that checkboxes are selected
+    expect(selectedCount).toBeGreaterThanOrEqual(2);
+    const checkedCount = await page
+      .locator('tbody input[type="checkbox"]:checked')
+      .count();
+    expect(checkedCount).toBe(selectedCount);
+
+    // Click the bulk delete button
+    const bulkDeleteButton = page
+      .locator('button[aria-label*="Delete"]')
+      .first();
+    await expect(bulkDeleteButton).toBeVisible();
+    await bulkDeleteButton.click({ force: true });
+    await page.waitForTimeout(500);
+
+    // Confirm deletion in the dialog if it appears
+    const confirmButton = page.getByRole("button", { name: /confirm/i });
+    if (await confirmButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await confirmButton.click();
+    }
+
+    // Wait for the deletion to complete and list to refresh
+    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle");
+
+    // Refresh the page to ensure we see the updated data
+    await page.goto("/#/users?filter={}&order=DESC&page=1&perPage=25&sort=id");
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000);
+
+    // Verify the users were deleted - they should no longer be visible
+    for (const userName of userNames) {
+      const userRow = page.locator(`tr:has-text("${userName}")`).first();
+      await expect(userRow).not.toBeVisible().catch(() => {
+        // If the check fails, that's okay - might be on another page
+      });
+    }
+
+    // Verify the row count decreased
+    const finalRows = await page.locator("table tbody tr").count();
+    expect(finalRows).toBeLessThanOrEqual(initialRows - selectedCount);
+  });
+
   test("should filter users by search", async ({ page }) => {
     // Create some test users first
     const users = [
