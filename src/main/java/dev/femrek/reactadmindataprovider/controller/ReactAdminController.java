@@ -71,8 +71,7 @@ public abstract class ReactAdminController<T, ID extends Serializable> implement
 
     @Override
     public ResponseEntity<List<ID>> updateMany(List<ID> ids, Map<String, Object> fields) {
-        getService().updateAll(ids, fields);
-        return ResponseEntity.ok(ids);
+        return ResponseEntity.ok(getService().updateAll(ids, fields));
     }
 
     @Override

@@ -86,24 +86,22 @@ public class UserService implements IReactAdminService<User, Long> {
     }
 
     @Override
-    public List<User> updateAll(Iterable<Long> ids, Map<String, Object> fields) {
+    public List<Long> updateAll(Iterable<Long> ids, Map<String, Object> fields) {
         List<User> users = findAllById(ids);
-        users.forEach(user -> {
-            fields.forEach((key, value) -> {
-                switch (key) {
-                    case "name":
-                        user.setName((String) value);
-                        break;
-                    case "email":
-                        user.setEmail((String) value);
-                        break;
-                    case "role":
-                        user.setRole((String) value);
-                        break;
-                }
-            });
-        });
-        return userRepository.saveAll(users);
+        users.forEach(user -> fields.forEach((key, value) -> {
+            switch (key) {
+                case "name":
+                    user.setName((String) value);
+                    break;
+                case "email":
+                    user.setEmail((String) value);
+                    break;
+                case "role":
+                    user.setRole((String) value);
+                    break;
+            }
+        }));
+        return userRepository.saveAll(users).stream().map(User::getId).toList();
     }
 
     @Override
