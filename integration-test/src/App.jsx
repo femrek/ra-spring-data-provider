@@ -1,14 +1,98 @@
-import React from 'react';
-import { Admin, Resource, List, Datagrid, TextField, EmailField, Create, SimpleForm, TextInput, Edit, EditButton, DeleteButton } from 'react-admin';
+import React, { useState } from 'react';
+import { Admin, Resource, List, Datagrid, TextField, EmailField, Create, SimpleForm, TextInput, Edit, EditButton, DeleteButton, BulkDeleteButton, useListContext, useUpdateMany, useRefresh, useNotify, useUnselectAll, Button } from 'react-admin';
 import jsonServerProvider from 'ra-data-json-server';
+import { Dialog, DialogTitle, DialogContent, DialogActions, TextField as MuiTextField } from '@mui/material';
 
 // Custom data provider to adapt to our Spring Boot API
 const dataProvider = jsonServerProvider('http://localhost:8081/api');
 
+// Custom Bulk Update Button with Dialog
+const BulkUpdateRoleButton = () => {
+  const [open, setOpen] = useState(false);
+  const [newRole, setNewRole] = useState('');
+  const { selectedIds } = useListContext();
+  const [updateMany, { isLoading }] = useUpdateMany();
+  const refresh = useRefresh();
+  const notify = useNotify();
+  const unselectAll = useUnselectAll('users');
+
+  const handleClick = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+    setNewRole('');
+  };
+
+  const handleUpdate = async () => {
+    try {
+      await updateMany(
+        'users',
+        { ids: selectedIds, data: { role: newRole } },
+        {
+          onSuccess: () => {
+            notify('Users updated successfully', { type: 'success' });
+            refresh();
+            unselectAll();
+            handleClose();
+          },
+          onError: () => {
+            notify('Error: Users not updated', { type: 'error' });
+          }
+        }
+      );
+    } catch (error) {
+      notify('Error: Users not updated', { type: 'error' });
+    }
+  };
+
+  return (
+    <>
+      <Button 
+        label="Update Role" 
+        onClick={handleClick}
+        disabled={selectedIds.length === 0}
+      />
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Update Role for Selected Users</DialogTitle>
+        <DialogContent>
+          <MuiTextField
+            autoFocus
+            margin="dense"
+            label="New Role"
+            type="text"
+            fullWidth
+            value={newRole}
+            onChange={(e) => setNewRole(e.target.value)}
+            variant="standard"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button label="Cancel" onClick={handleClose} />
+          <Button 
+            label="Update" 
+            onClick={handleUpdate} 
+            disabled={isLoading || !newRole}
+          />
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+};
+
+// Bulk Actions
+const UserBulkActionButtons = () => (
+  <>
+    <BulkUpdateRoleButton />
+    <BulkDeleteButton />
+  </>
+);
+
 // Users List Component
 const UserList = () => (
   <List>
-    <Datagrid>
+    <Datagrid bulkActionButtons={<UserBulkActionButtons />}>
       <TextField source="id" />
       <TextField source="name" />
       <EmailField source="email" />

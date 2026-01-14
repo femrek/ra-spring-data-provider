@@ -12,10 +12,10 @@ test.describe("React Admin User Management", () => {
     await expect(page.locator("table")).toBeVisible();
 
     // Check if the table headers are present
-    await expect(page.getByText("Id")).toBeVisible();
-    await expect(page.getByText("Name")).toBeVisible();
-    await expect(page.getByText("Email")).toBeVisible();
-    await expect(page.getByText("Role")).toBeVisible();
+    await expect(page.locator("table thead").getByText("Id")).toBeVisible();
+    await expect(page.locator("table thead").getByText("Name")).toBeVisible();
+    await expect(page.locator("table thead").getByText("Email")).toBeVisible();
+    await expect(page.locator("table thead").getByText("Role")).toBeVisible();
   });
 
   test("should create a new user", async ({ page }) => {
@@ -73,6 +73,100 @@ test.describe("React Admin User Management", () => {
     await page.waitForURL(/.*#\/users/);
     await page.waitForTimeout(1000);
     await expect(page.getByText(`Updated User ${timestamp}`)).toBeVisible();
+  });
+
+  test("should update multiple users (bulk update)", async ({ page }) => {
+    // First, create multiple users to update
+    const timestamp = Date.now();
+    const usersToCreate = [
+      {
+        name: `Bulk User 1 ${timestamp}`,
+        email: `bulk1${timestamp}@example.com`,
+        role: "user",
+      },
+      {
+        name: `Bulk User 2 ${timestamp}`,
+        email: `bulk2${timestamp}@example.com`,
+        role: "user",
+      },
+    ];
+
+    for (const user of usersToCreate) {
+      await page.goto("/#/users/create");
+      await page.getByLabel(/name/i).fill(user.name);
+      await page.getByLabel(/email/i).fill(user.email);
+      await page.getByLabel(/role/i).fill(user.role);
+      await page.getByRole("button", { name: /save/i }).click();
+      await page.waitForURL(/.*#\/users/);
+      await page.waitForTimeout(500);
+    }
+
+    // Go back to list and ensure we're on the first page with latest data
+    await page.goto("/#/users?filter={}&order=DESC&page=1&perPage=25&sort=id");
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000);
+
+    // Store the names of users we want to select
+    const userNames = usersToCreate.map((u) => u.name);
+
+    // Find and select rows containing our test users
+    for (let i = 0; i < Math.min(2, userNames.length); i++) {
+      const userName = userNames[i];
+      const userRow = page.locator(`tr:has-text("${userName}")`).first();
+      await expect(userRow).toBeVisible({ timeout: 5000 });
+
+      const checkbox = userRow.locator('input[type="checkbox"]');
+      await checkbox.click();
+      await page.waitForTimeout(300);
+    }
+
+    // Verify that checkboxes are selected
+    const selectedCount = await page
+      .locator('tbody input[type="checkbox"]:checked')
+      .count();
+    expect(selectedCount).toBeGreaterThanOrEqual(2);
+
+    // Click the bulk update role button
+    const bulkUpdateButton = page.getByRole("button", { name: /update role/i });
+    await expect(bulkUpdateButton).toBeVisible();
+    await bulkUpdateButton.click();
+
+    // Wait for the dialog to appear
+    await page.waitForSelector('div[role="dialog"]', { state: "visible" });
+    await page.waitForTimeout(500);
+
+    // Fill in the new role in the dialog
+    const roleInput = page.getByLabel(/new role/i);
+    await expect(roleInput).toBeVisible();
+    await roleInput.click();
+    await roleInput.fill("admin");
+    await page.waitForTimeout(300);
+
+    // Click the update button in the dialog
+    const updateButton = page
+      .locator('div[role="dialog"]')
+      .getByRole("button", { name: /^update$/i });
+    await expect(updateButton).toBeEnabled();
+    await updateButton.click();
+
+    // Wait for the dialog to close and the list to refresh
+    await page
+      .waitForSelector('div[role="dialog"]', { state: "hidden", timeout: 5000 })
+      .catch(() => {});
+    await page.waitForTimeout(2000);
+    await page.waitForLoadState("networkidle");
+
+    // Refresh the page to ensure we see the updated data
+    await page.goto("/#/users?filter={}&order=DESC&page=1&perPage=25&sort=id");
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(1000);
+
+    // Verify the users were updated
+    for (const userName of userNames) {
+      const userRow = page.locator(`tr:has-text("${userName}")`).first();
+      await expect(userRow).toBeVisible({ timeout: 5000 });
+      await expect(userRow).toContainText("admin");
+    }
   });
 
   test("should delete a user", async ({ page }) => {
