@@ -15,7 +15,7 @@
     <packaging>jar</packaging>
     <name>react-admin-data-provider</name>
     <description>Java library that provides a Spring-friendly data provider for React Admin clients.</description>
-    <url>https://github.com/femrek/ra-spring-data-provider</url>
+    <url>https://github.com/femrek/ra-spring-json-server</url>
     <licenses>
         <license>
             <name>Apache License, Version 2.0</name>
@@ -32,10 +32,10 @@
         </developer>
     </developers>
     <scm>
-        <connection>scm:git:git://github.com/femrek/ra-spring-data-provider.git</connection>
-        <developerConnection>scm:git:ssh://github.com/femrek/ra-spring-data-provider.git</developerConnection>
+        <connection>scm:git:git://github.com/femrek/ra-spring-json-server.git</connection>
+        <developerConnection>scm:git:ssh://github.com/femrek/ra-spring-json-server.git</developerConnection>
         <tag>HEAD</tag>
-        <url>https://github.com/femrek/ra-spring-data-provider</url>
+        <url>https://github.com/femrek/ra-spring-json-server</url>
     </scm>
     <properties>
         <java.version>17</java.version>
@@ -95,7 +95,7 @@
         <repository>
             <id>github</id>
             <name>React Admin Data Provider GitHub Packages</name>
-            <url>https://maven.pkg.github.com/femrek/ra-spring-data-provider/</url>
+            <url>https://maven.pkg.github.com/femrek/ra-spring-json-server/</url>
         </repository>
     </distributionManagement>
 

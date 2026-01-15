@@ -342,7 +342,7 @@ The controller automatically provides these endpoints. These are also the ra-dat
 
 ```bash
 # Clone the repository
-git clone https://github.com/femrek/ra-spring-data-provider.git
+git clone https://github.com/femrek/ra-spring-json-server.git
 cd ra-spring-data-provider
 
 # Build the project
