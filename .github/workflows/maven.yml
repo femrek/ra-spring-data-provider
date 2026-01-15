@@ -37,4 +37,4 @@ jobs:
         run: mvn -B package --file pom.xml
 
       - name: Run integration test
-        run: sh run-integration-test.sh
+        run: sh run-integration-tests.sh
