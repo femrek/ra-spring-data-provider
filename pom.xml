@@ -14,7 +14,7 @@
     <version>0.2.0</version>
     <packaging>jar</packaging>
     <name>react-admin-data-provider</name>
-    <description>Java library that provides a Spring-friendly data provider for React Admin clients.</description>
+    <description>Java library that provides a Spring Controller Interface for React Admin clients.</description>
     <url>https://github.com/femrek/ra-spring-json-server</url>
     <licenses>
         <license>
