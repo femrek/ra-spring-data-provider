@@ -11,7 +11,7 @@
 
     <groupId>dev.femrek</groupId>
     <artifactId>ra-json-spring-api</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
     <name>react-admin-data-provider</name>
     <description>Java library that provides a Spring-friendly data provider for React Admin clients.</description>
