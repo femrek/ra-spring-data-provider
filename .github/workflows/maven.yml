@@ -10,29 +10,31 @@ jobs:
   build-test-integration-test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    # Set up Java
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: maven
+      # Set up Java
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
 
-    # Set up Node.js (ADD THIS)
-    - name: Set up Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '24' # Replace with your required version
-        cache: 'npm'       # Caches node_modules for faster builds
+      # Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: 'integration-test/package-lock.json'
 
-    # Install npm dependencies (ADD THIS if your .sh script doesn't do it)
-    - name: Install npm dependencies
-      run: npm ci
+      # Install npm dependencies
+      - name: Install npm dependencies
+        working-directory: integration-test
+        run: npm ci
 
-    - name: Build with Maven
-      run: mvn -B package --file pom.xml
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
 
-    - name: Run integration test
-      run: sh run-integration-test.sh
+      - name: Run integration test
+        run: sh run-integration-test.sh
