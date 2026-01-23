@@ -4,10 +4,7 @@
 [![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.1-green.svg)](https://spring.io/projects/spring-boot)
 
-A Spring Boot library that provides a standardized REST API implementation compatible
-with [React Admin](https://marmelab.com/react-admin/)'s data provider protocol
-[ra-data-json-server](https://github.com/marmelab/react-admin/blob/master/packages/ra-data-json-server/README.md).
-This library simplifies the process of building React Admin backends with Spring Boot.
+A Spring Boot library that simplifies building [React Admin][react-admin] backends. This library provides a standardized REST API implementation that works with the [ra-spring-data-provider][ra-spring-data-provider] data provider (recommended for efficient bulk operations) and is also compatible with [ra-data-json-server][ra-data-json-server].
 
 ## 📋 Table of Contents
 
@@ -27,11 +24,11 @@ This library simplifies the process of building React Admin backends with Spring
 
 This library bridges the gap between Spring Boot applications and React Admin frontends by providing:
 
-- **Drop-in Controllers**: Extend `ReactAdminController` to automatically handle all React Admin data provider
-  operations
-- **Service Interface**: Implement `IReactAdminService` to define your business logic
-- **Standard Protocol**: Full compatibility with React Admin's `ra-data-json-server` data provider
-- **Advanced Features**: Built-in support for pagination, sorting, filtering, and global search
+- **Drop-in Controllers**: Extend `RAController` to automatically handle all React Admin data provider operations
+- **Service Interface**: Implement `IRAService` to define your business logic
+- **Special Data Provider**: Use compatible data provider [ra-spring-data-provider][ra-spring-data-provider] on client side.
+- **Standard Data Provider Support**: Also, you can use [ra-data-json-server][ra-data-json-server] as data provider on client side.
+- **Advanced Features**: Built-in support on your API design for pagination, sorting, filtering, and global search
 
 ## Features
 
@@ -549,7 +546,7 @@ public Page<User> findWithFilters(Map<String, String> filters, String q, Pageabl
 
 ## API Endpoints
 
-The controller automatically provides these endpoints. These are also the ra-data-json-server end-points:
+`RAContoller` automatically provides these endpoints. These are also the ra-spring-data-provider end-points:
 
 | Method | Endpoint                | React Admin Method | Description                     |
 | ------ | ----------------------- | ------------------ | ------------------------------- |
@@ -562,7 +559,9 @@ The controller automatically provides these endpoints. These are also the ra-dat
 | PUT    | `/{resource}?id=1&id=2` | `updateMany`       | Update multiple records (bulk)  |
 | DELETE | `/{resource}?id=1&id=2` | `deleteMany`       | Delete multiple records (bulk)  |
 
-**Note:** The **ra-spring-data-provider** sends single requests with multiple `id` query parameters for bulk operations (updateMany and deleteMany), making them more efficient than sending individual requests for each record.
+**Note:** The [ra-spring-data-provider][ra-spring-data-provider] sends single requests with multiple `id` query parameters for bulk operations (updateMany and deleteMany), making them more efficient than the [ra-data-json-server][ra-data-json-server] approach, which sends individual requests for each record.
+
+**Note:** For [ra-data-json-server] clients `IRAControllerJS` should be inherited instead of `IRAController`
 
 ### Query Parameters
 
@@ -580,31 +579,47 @@ The controller automatically provides these endpoints. These are also the ra-dat
 ```bash
 # Clone the repository
 git clone https://github.com/femrek/ra-spring-json-server.git
-cd ra-spring-data-provider
+cd ra-spring-json-server
 
 # Build the project
+cd ra-spring-json-server
 mvn clean install
 
-# Run tests
+# Run unit tests
 mvn test
 
 # Run integration tests
+cd ..
+cd ra-spring-data-provider
+npm i
+cd ..
 ./run-integration-tests.sh
 ```
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the Apache License 2.0 - see the [LICENSE][license] file for details.
 
 ## Acknowledgments
 
-- [React Admin](https://marmelab.com/react-admin/) - Frontend framework for building admin interfaces.
-  - [ra-data-json-server](https://github.com/marmelab/react-admin/blob/master/packages/ra-data-json-server/README.md) -
+- [React Admin][react-admin] - Frontend framework for building admin interfaces.
+  - [ra-data-json-server][ra-data-json-server] -
     The data provider protocol specification provided by React Admin.
-- [Spring Boot](https://spring.io/projects/spring-boot) - Backend framework that this library provides integration for.
+- [Spring Boot][spring-boot] - Backend framework that this library provides integration for.
 
 ## Resources
 
-- [React Admin Documentation](https://marmelab.com/react-admin/Tutorial.html)
-- [React Admin Data Provider Documentation](https://marmelab.com/react-admin/DataProviders.html)
-- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
+- [React Admin Documentation][react-admin-docs]
+- [React Admin Data Provider Documentation][react-admin-dataproviders]
+- [Spring Boot Documentation][spring-boot-docs]
+
+<!-- Link Definitions -->
+
+[react-admin]: https://marmelab.com/react-admin/
+[ra-spring-data-provider]: https://github.com/femrek/ra-spring-json-server/tree/main/ra-spring-data-provider
+[ra-data-json-server]: https://github.com/marmelab/react-admin/tree/master/packages/ra-data-json-server
+[spring-boot]: https://spring.io/projects/spring-boot
+[license]: LICENSE
+[react-admin-docs]: https://marmelab.com/react-admin/Tutorial.html
+[react-admin-dataproviders]: https://marmelab.com/react-admin/DataProviders.html
+[spring-boot-docs]: https://spring.io/projects/spring-boot

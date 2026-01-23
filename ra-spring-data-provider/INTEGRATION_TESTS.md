@@ -57,18 +57,10 @@ Basic application health check
 
 ## Running Tests
 
+There is a bash script to start backend and run integration tests.
+
 ```bash
-# All tests
-npm test
-
-# Specific file
-npm test users.spec.js
-
-# With UI
-npm test:ui
-
-# Debug mode
-npm test:headed
+cd .. && ./run-integration-tests
 ```
 
 ## Requirements
