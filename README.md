@@ -17,9 +17,9 @@ This library simplifies the process of building React Admin backends with Spring
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Usage](#usage)
-    - [Basic Setup](#basic-setup)
-    - [Service Implementation](#service-implementation)
-    - [Advanced Filtering](#advanced-filtering)
+  - [Basic Setup](#basic-setup)
+  - [Service Implementation](#service-implementation)
+  - [Advanced Filtering](#advanced-filtering)
 - [API Endpoints](#api-endpoints)
 - [License](#license)
 
@@ -53,7 +53,6 @@ This library bridges the gap between Spring Boot applications and React Admin fr
 Add the dependency to your `pom.xml`:
 
 ```xml
-
 <dependency>
     <groupId>dev.femrek</groupId>
     <artifactId>ra-spring-json-server</artifactId>
@@ -71,43 +70,300 @@ implementation 'dev.femrek:ra-spring-json-server:0.2.1'
 
 ## Quick Start
 
-### 1. Create Your Entity
+### a. ra-spring-data-provider (Recommended)
+
+This approach uses efficient bulk operations with single requests containing multiple ID parameters.
+
+<details>
+<summary>Click to expand setup instructions</summary>
+
+#### 1. Install ra-spring-data-provider
+
+Install the compatible React Admin data provider:
+
+```bash
+npm install ra-spring-data-provider
+```
+
+or
+
+```bash
+yarn add ra-spring-data-provider
+```
+
+This package is specifically designed to work with the Spring Boot backend created using this library.
+
+#### 2. Configure React Admin Frontend
+
+```javascript
+import { Admin, Resource, ListGuesser } from "react-admin";
+import raSpringDataProvider from "ra-spring-data-provider";
+
+const dataProvider = raSpringDataProvider("http://localhost:8080/api");
+
+const App = () => (
+  <Admin dataProvider={dataProvider}>
+    <Resource name="users" list={ListGuesser} />
+  </Admin>
+);
+
+export default App;
+```
+
+#### 3. Create Your Entity
 
 ```java
-
 @Entity
 @Table(name = "users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String name;
     private String email;
     private String role;
-
-    // Getters and setters...
 }
 ```
 
-### 2. Create Your Repository
+#### 4. Create Your Repository
 
 ```java
-
 @Repository
 public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
 }
 ```
 
-### 3. Implement the Service
+#### 5. Implement the Service
 
 ```java
-
 @Service
-public class UserService implements IReactAdminService<User, Long> {
-
-    @Autowired
+public class UserService implements IRAService<User, Long> {
     private UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    @Override
+    public Page<User> findWithFilters(Map<String, String> filters, String q, Pageable pageable) {
+        Specification<User> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Apply field-specific filters
+            if (filters != null) {
+                filters.forEach((field, value) -> {
+                    if (value != null && !value.isEmpty()) {
+                        predicates.add(criteriaBuilder.equal(root.get(field), value));
+                    }
+                });
+            }
+
+            // Apply global search
+            if (q != null && !q.isEmpty()) {
+                String pattern = "%" + q.toLowerCase() + "%";
+                Predicate namePredicate = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("name")), pattern);
+                Predicate emailPredicate = criteriaBuilder.like(
+                        criteriaBuilder.lower(root.get("email")), pattern);
+                predicates.add(criteriaBuilder.or(namePredicate, emailPredicate));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return userRepository.findAll(spec, pageable);
+    }
+
+    @Override
+    public List<User> findAllById(Iterable<Long> ids) {
+        return userRepository.findAllById(ids);
+    }
+
+    @Override
+    public User findById(Long id) {
+        return userRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public User save(User entity) {
+        return userRepository.save(entity);
+    }
+
+    @Override
+    public User update(Long id, Map<String, Object> fields) {
+        User user = findById(id);
+        if (user == null) return null;
+
+        fields.forEach((key, value) -> {
+            switch (key) {
+                case "name" -> user.setName((String) value);
+                case "email" -> user.setEmail((String) value);
+                case "role" -> user.setRole((String) value);
+            }
+        });
+
+        return userRepository.save(user);
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        userRepository.deleteById(id);
+    }
+
+    @Override
+    public List<Long> updateMany(Iterable<Long> ids, Map<String, Object> fields) {
+        List<Long> updatedIds = new ArrayList<>();
+
+        // Find all users by their IDs
+        List<User> users = userRepository.findAllById(ids);
+
+        // Update each user with the provided fields
+        for (User user : users) {
+            fields.forEach((key, value) -> {
+                switch (key) {
+                    case "name" -> user.setName((String) value);
+                    case "email" -> user.setEmail((String) value);
+                    case "role" -> user.setRole((String) value);
+                }
+            });
+            User savedUser = userRepository.save(user);
+            updatedIds.add(savedUser.getId());
+        }
+
+        return updatedIds;
+    }
+
+    @Override
+    public List<Long> deleteMany(Iterable<Long> ids) {
+        List<Long> deletedIds = new ArrayList<>();
+
+        // Collect the IDs before deletion
+        for (Long id : ids) {
+            deletedIds.add(id);
+        }
+
+        // Delete all users by their IDs
+        userRepository.deleteAllById(ids);
+
+        return deletedIds;
+    }
+}
+```
+
+#### 6. Create Your Controller
+
+```java
+@RestController
+@RequestMapping("/api/users") // resource name: users
+@CrossOrigin(origins = "*")
+public class UserController extends RAController<User, Long> {
+    private final UserService userService;
+
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
+    @Override
+    protected IRAService<User, Long> getService() {
+        return userService;
+    }
+}
+```
+
+#### 7. Configure CORS (if needed)
+
+```java
+@Configuration
+public class WebConfig {
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/api/**")
+                        .allowedOrigins("*")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("*")
+                        .exposedHeaders("Content-Range", "X-Total-Count"); // for pagination
+            }
+        };
+    }
+}
+```
+
+</details>
+
+### b. ra-data-json-server
+
+This approach uses the standard JSON Server protocol where bulk operations send multiple individual requests. So, [starting with ra-spring-data-provider](#a-ra-spring-data-provider-recommended) is recommened.
+
+<details>
+<summary>Click to expand setup instructions</summary>
+
+#### 1. Install ra-data-json-server
+
+Install the React Admin JSON Server data provider:
+
+```bash
+npm install ra-data-json-server
+```
+
+or
+
+```bash
+yarn add ra-data-json-server
+```
+
+#### 2. Configure React Admin Frontend
+
+```javascript
+import { Admin, Resource, ListGuesser } from "react-admin";
+import jsonServerProvider from "ra-data-json-server";
+
+const dataProvider = jsonServerProvider("http://localhost:8080/api");
+
+const App = () => (
+  <Admin dataProvider={dataProvider}>
+    <Resource name="users" list={ListGuesser} />
+  </Admin>
+);
+
+export default App;
+```
+
+#### 3. Create Your Entity
+
+```java
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    private String name;
+    private String email;
+    private String role;
+}
+```
+
+#### 4. Create Your Repository
+
+```java
+@Repository
+public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
+}
+```
+
+#### 5. Implement the Service
+
+```java
+@Service
+public class UserService implements IRAServiceJS<User, Long> {
+    private UserRepository userRepository;
+
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Override
     public Page<User> findWithFilters(Map<String, String> filters, String q, Pageable pageable) {
@@ -177,15 +433,13 @@ public class UserService implements IReactAdminService<User, Long> {
 }
 ```
 
-### 4. Create Your Controller
+#### 6. Create Your Controller
 
 ```java
-
 @RestController
-@RequestMapping("/api/users") // resource name
+@RequestMapping("/api/users") // resource name: users
 @CrossOrigin(origins = "*")
-public class UserController extends ReactAdminController<User, Long> {
-
+public class UserController extends RAControllerJS<User, Long> {
     private final UserService userService;
 
     public UserController(UserService userService) {
@@ -193,19 +447,17 @@ public class UserController extends ReactAdminController<User, Long> {
     }
 
     @Override
-    protected IReactAdminService<User, Long> getService() {
+    protected IRAServiceJS<User, Long> getService() {
         return userService;
     }
 }
 ```
 
-### 5. Configure CORS (if needed)
+#### 7. Configure CORS (if needed)
 
 ```java
-
 @Configuration
 public class WebConfig {
-
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
@@ -222,22 +474,7 @@ public class WebConfig {
 }
 ```
 
-### 6. Configure React Admin Frontend
-
-```javascript
-import { Admin, Resource, ListGuesser } from 'react-admin';
-import jsonServerProvider from 'ra-data-json-server';
-
-const dataProvider = jsonServerProvider('http://localhost:8080/api');
-
-const App = () => (
-  <Admin dataProvider={dataProvider}>
-    <Resource name="users" list={ListGuesser} />
-  </Admin>
-);
-
-export default App;
-```
+</details>
 
 ## Usage
 
@@ -245,18 +482,18 @@ export default App;
 
 The library provides two main components:
 
-1. **`ReactAdminController<T, ID>`**: Abstract controller that handles HTTP requests
-2. **`IReactAdminService<T, ID>`**: Service interface for business logic
+1. **`RAController<T, ID>`**: Abstract controller that handles HTTP requests
+2. **`IRAService<T, ID>`**: Service interface for business logic
 
 Your implementation needs to:
 
-- Extend `ReactAdminController` for your entity
-- Implement `IReactAdminService` for your business logic
+- Extend `RAController` for your entity
+- Implement `IRAService` for your business logic
 - Return your service implementation from the `getService()` method
 
 ### Service Implementation
 
-The `IReactAdminService` interface requires you to implement:
+The `IRAService` interface requires you to implement:
 
 - **`findWithFilters()`**: Query with filters, search, pagination, and sorting
 - **`findAllById()`**: Fetch multiple records by IDs
@@ -315,17 +552,17 @@ public Page<User> findWithFilters(Map<String, String> filters, String q, Pageabl
 The controller automatically provides these endpoints. These are also the ra-data-json-server end-points:
 
 | Method | Endpoint                | React Admin Method | Description                     |
-|--------|-------------------------|--------------------|---------------------------------|
+| ------ | ----------------------- | ------------------ | ------------------------------- |
 | GET    | `/{resource}`           | `getList`          | Get paginated list with filters |
 | GET    | `/{resource}?id=1&id=2` | `getMany`          | Get multiple records by IDs     |
 | GET    | `/{resource}/{id}`      | `getOne`           | Get single record               |
 | POST   | `/{resource}`           | `create`           | Create new record               |
 | PUT    | `/{resource}/{id}`      | `update`           | Update single record            |
 | DELETE | `/{resource}/{id}`      | `delete`           | Delete single record            |
-| PUT    | same as `update`        | `updateMany`       | Update multiple records         |
-| DELETE | same as `delete`        | `deleteMany`       | Delete multiple records         |
+| PUT    | `/{resource}?id=1&id=2` | `updateMany`       | Update multiple records (bulk)  |
+| DELETE | `/{resource}?id=1&id=2` | `deleteMany`       | Delete multiple records (bulk)  |
 
-**Note:** Update many and delete many operations are handled via multiple requests to the above endpoints.
+**Note:** The **ra-spring-data-provider** sends single requests with multiple `id` query parameters for bulk operations (updateMany and deleteMany), making them more efficient than sending individual requests for each record.
 
 ### Query Parameters
 
@@ -362,8 +599,8 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENS
 ## Acknowledgments
 
 - [React Admin](https://marmelab.com/react-admin/) - Frontend framework for building admin interfaces.
-    - [ra-data-json-server](https://github.com/marmelab/react-admin/blob/master/packages/ra-data-json-server/README.md) -
-      The data provider protocol specification provided by React Admin.
+  - [ra-data-json-server](https://github.com/marmelab/react-admin/blob/master/packages/ra-data-json-server/README.md) -
+    The data provider protocol specification provided by React Admin.
 - [Spring Boot](https://spring.io/projects/spring-boot) - Backend framework that this library provides integration for.
 
 ## Resources

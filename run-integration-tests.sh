@@ -65,7 +65,7 @@ done
 # Step 4: Run Playwright tests
 echo -e "${YELLOW}🎭 Running Playwright tests...${NC}"
 cd ../ra-spring-data-provider
-npm test
+npm run test
 
 # Step 5: Check test results
 if [ $? -eq 0 ]; then

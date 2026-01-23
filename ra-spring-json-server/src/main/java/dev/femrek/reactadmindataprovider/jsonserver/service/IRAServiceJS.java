@@ -1,13 +1,12 @@
-package dev.femrek.reactadmindataprovider.service;
+package dev.femrek.reactadmindataprovider.jsonserver.service;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-public interface IReactAdminService<T, ID extends Serializable> {
+public interface IRAServiceJS<T, ID> {
     /**
      * Finds entities matching the given filters and global search query.
      *

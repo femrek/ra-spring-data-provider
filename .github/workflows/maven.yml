@@ -30,11 +30,11 @@ jobs:
         with:
           node-version: "24"
           cache: "npm"
-          cache-dependency-path: "integration-test/package-lock.json"
+          cache-dependency-path: "ra-spring-data-provider/package-lock.json"
 
       # Install npm dependencies
       - name: Install npm dependencies
-        working-directory: ra-spring-json-server
+        working-directory: ra-spring-data-provider
         run: npm ci
 
       - name: Run integration test

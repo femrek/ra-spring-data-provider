@@ -1,6 +1,8 @@
-package dev.femrek.reactadmindataprovider.unit;
+package dev.femrek.reactadmindataprovider.unit.jsonserver;
 
-import dev.femrek.reactadmindataprovider.service.IReactAdminService;
+import dev.femrek.reactadmindataprovider.jsonserver.service.IRAServiceJS;
+import dev.femrek.reactadmindataprovider.unit.User;
+import dev.femrek.reactadmindataprovider.unit.UserRepository;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -13,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
-public class UserService implements IReactAdminService<User, Long> {
+public class UserServiceJS implements IRAServiceJS<User, Long> {
 
     @Autowired
     private UserRepository userRepository;

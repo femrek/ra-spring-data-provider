@@ -1,8 +1,9 @@
-package dev.femrek.reactadmindataprovider.integration;
+package dev.femrek.reactadmindataprovider.unit.product;
 
 import dev.femrek.reactadmindataprovider.service.IRAService;
+import dev.femrek.reactadmindataprovider.unit.User;
+import dev.femrek.reactadmindataprovider.unit.UserRepository;
 import jakarta.persistence.criteria.Predicate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -11,12 +12,20 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.StreamSupport;
 
+/**
+ * Extended service implementation for User entity with bulk operations support.
+ * This service implements all standard CRUD operations plus updateMany and deleteMany operations
+ * for batch processing of entities.
+ */
 @Service
 public class UserService implements IRAService<User, Long> {
+    private final UserRepository userRepository;
 
-    @Autowired
-    private UserRepository userRepository;
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Override
     public Page<User> findWithFilters(Map<String, String> filters, String q, Pageable pageable) {
@@ -90,12 +99,19 @@ public class UserService implements IRAService<User, Long> {
         userRepository.deleteById(id);
     }
 
+    /**
+     * Updates multiple users with the same field values.
+     *
+     * @param ids    The collection of user IDs to update.
+     * @param fields A map of field names to their new values to apply to all users.
+     * @return A list of IDs of the updated users.
+     */
     @Override
-    public List<Long> updateMany(Iterable<Long> longs, Map<String, Object> fields) {
+    public List<Long> updateMany(Iterable<Long> ids, Map<String, Object> fields) {
         List<Long> updatedIds = new ArrayList<>();
 
         // Find all users by their IDs
-        List<User> users = userRepository.findAllById(longs);
+        List<User> users = userRepository.findAllById(ids);
 
         // Update each user with the provided fields
         for (User user : users) {
@@ -119,18 +135,21 @@ public class UserService implements IRAService<User, Long> {
         return updatedIds;
     }
 
+    /**
+     * Deletes multiple users by their IDs.
+     *
+     * @param ids The collection of user IDs to delete.
+     * @return A list of IDs of the deleted users.
+     */
     @Override
-    public List<Long> deleteMany(Iterable<Long> longs) {
-        List<Long> deletedIds = new ArrayList<>();
-
-        // Collect the IDs before deletion
-        for (Long id : longs) {
-            deletedIds.add(id);
-        }
+    public List<Long> deleteMany(Iterable<Long> ids) {
+        List<Long> deletedIds = StreamSupport.stream(ids.spliterator(), false)
+                .toList();
 
         // Delete all users by their IDs
-        userRepository.deleteAllById(longs);
+        userRepository.deleteAllById(ids);
 
         return deletedIds;
     }
 }
+

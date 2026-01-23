@@ -1,6 +1,6 @@
-package dev.femrek.reactadmindataprovider.controller;
+package dev.femrek.reactadmindataprovider.jsonserver.controller;
 
-import dev.femrek.reactadmindataprovider.service.IReactAdminService;
+import dev.femrek.reactadmindataprovider.jsonserver.service.IRAServiceJS;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.data.domain.Page;
@@ -11,18 +11,17 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
-public abstract class ReactAdminController<T, ID extends Serializable> implements IReactAdminController<T, ID> {
-    private static final Log log = LogFactory.getLog(ReactAdminController.class);
-
-    protected abstract IReactAdminService<T, ID> getService();
+public abstract class RAControllerJS<T, ID> implements IRAControllerJS<T, ID> {
+    private static final Log log = LogFactory.getLog(RAControllerJS.class);
 
     private static final List<String> RESERVED_PARAMS = List.of(
             "_start", "_end", "_sort", "_order", "q", "id", "_embed"
     );
+
+    protected abstract IRAServiceJS<T, ID> getService();
 
     @Override
     public ResponseEntity<List<T>> getList(

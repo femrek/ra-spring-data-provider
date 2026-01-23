@@ -1,5 +1,7 @@
-package dev.femrek.reactadmindataprovider.unit;
+package dev.femrek.reactadmindataprovider.unit.jsonserver;
 
+import dev.femrek.reactadmindataprovider.unit.TestApplication;
+import dev.femrek.reactadmindataprovider.unit.UserRepository;
 import okhttp3.*;
 import okhttp3.MediaType;
 import org.junit.jupiter.api.*;
@@ -23,13 +25,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(classes = TestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(locations = "classpath:application-test.properties")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class ReactAdminControllerTest {
+class RAControllerJSTest {
     @LocalServerPort
     private int port;
     private final UserRepository userRepository;
 
     @Autowired
-    public ReactAdminControllerTest(UserRepository userRepository) {
+    public RAControllerJSTest(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 

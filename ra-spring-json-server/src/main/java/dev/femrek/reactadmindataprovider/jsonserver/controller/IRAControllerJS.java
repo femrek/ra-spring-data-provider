@@ -1,9 +1,8 @@
-package dev.femrek.reactadmindataprovider.controller;
+package dev.femrek.reactadmindataprovider.jsonserver.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +15,7 @@ import java.util.Map;
  * @param <T>  the entity type managed by this controller
  * @param <ID> the entity identifier type, must be Serializable
  */
-public interface IReactAdminController<T, ID extends Serializable> {
+public interface IRAControllerJS<T, ID> {
     /**
      * Retrieves a list of entities with support for pagination, sorting, filtering, and multiple query modes.
      * This unified endpoint handles three ra-data-json-server operations:
