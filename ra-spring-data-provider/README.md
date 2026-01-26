@@ -1,6 +1,9 @@
 # ra-spring-data-provider
 
-Te [React Admin](https://marmelab.com/react-admin/) data provider of [ra-spring-json-server].
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+The [React Admin](https://marmelab.com/react-admin/) data provider for [ra-spring-json-server].
 
 This package provides a data provider that follows JSON Server API conventions, specifically adapted for Spring Boot backends. It supports efficient bulk operations and is designed to work seamlessly with Spring Boot controllers implementing the `IRAController` interface from [ra-spring-json-server] library.
 
@@ -77,5 +80,14 @@ The tests cover:
 
 - Node.js 18+
 - Java 17+
+
+## License
+
+This project is dual-licensed under:
+
+- [Apache License 2.0](LICENSE_APACHE)
+- [MIT License](LICENSE_MIT)
+
+You may choose either license for your use of this library.
 
 [ra-spring-json-server]: https://github.com/femrek/ra-spring-json-server

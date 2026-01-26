@@ -1,6 +1,7 @@
 # React Admin Spring Data Provider
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.1-green.svg)](https://spring.io/projects/spring-boot)
 
@@ -598,7 +599,12 @@ cd ..
 
 ## License
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE][license] file for details.
+This project is dual-licensed under:
+
+- [Apache License 2.0][license-apache] - see the [LICENSE_APACHE](LICENSE_APACHE) file
+- [MIT License][license-mit] - see the [LICENSE_MIT](LICENSE_MIT) file
+
+You may choose either license for your use of this library.
 
 ## Acknowledgments
 
@@ -619,7 +625,8 @@ This project is licensed under the Apache License 2.0 - see the [LICENSE][licens
 [ra-spring-data-provider]: https://github.com/femrek/ra-spring-json-server/tree/main/ra-spring-data-provider
 [ra-data-json-server]: https://github.com/marmelab/react-admin/tree/master/packages/ra-data-json-server
 [spring-boot]: https://spring.io/projects/spring-boot
-[license]: LICENSE
+[license-apache]: LICENSE_APACHE
+[license-mit]: LICENSE_MIT
 [react-admin-docs]: https://marmelab.com/react-admin/Tutorial.html
 [react-admin-dataproviders]: https://marmelab.com/react-admin/DataProviders.html
 [spring-boot-docs]: https://spring.io/projects/spring-boot
