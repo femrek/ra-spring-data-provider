@@ -5,7 +5,7 @@
 [![Java](https://img.shields.io/badge/Java-17+-orange.svg)](https://www.oracle.com/java/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.1-green.svg)](https://spring.io/projects/spring-boot)
 
-A Spring Boot library that simplifies building [React Admin][react-admin] backends. This library provides a standardized REST API implementation that works with the [ra-spring-data-provider][ra-spring-data-provider] data provider (recommended for efficient bulk operations) and is also compatible with [ra-data-json-server][ra-data-json-server].
+A Spring Boot library that simplifies building [React Admin][react-admin] backends. This library provides a standardized REST API implementation that works with the [ra-spring-data-provider][ra-spring-data-provider] data provider, which is based on the [ra-data-json-server][ra-data-json-server] protocol and provides efficient bulk operations.
 
 ## 📋 Table of Contents
 
@@ -27,13 +27,12 @@ This library bridges the gap between Spring Boot applications and React Admin fr
 
 - **Drop-in Controllers**: Extend `RAController` to automatically handle all React Admin data provider operations
 - **Service Interface**: Implement `IRAService` to define your business logic
-- **Special Data Provider**: Use compatible data provider [ra-spring-data-provider][ra-spring-data-provider] on client side.
-- **Standard Data Provider Support**: Also, you can use [ra-data-json-server][ra-data-json-server] as data provider on client side.
+- **Dedicated Data Provider**: Use the compatible [ra-spring-data-provider][ra-spring-data-provider] data provider on client side, which is based on the [ra-data-json-server][ra-data-json-server] protocol.
 - **Advanced Features**: Built-in support on your API design for pagination, sorting, filtering, and global search
 
 ## Features
 
-- ✅ **Complete CRUD Operations**: GET, CREATE, UPDATE, DELETE operations as ra-data-json-server specifies
+- ✅ **Complete CRUD Operations**: GET, CREATE, UPDATE, DELETE operations with efficient bulk support
 - ✅ **Pagination & Sorting**: Built-in support for paginated responses and multi-field sorting
 - ✅ **Advanced Filtering**: Field-specific filters and global search queries
 - ✅ **Type-Safe**: Generics support for any entity type
@@ -68,9 +67,7 @@ implementation 'dev.femrek:ra-spring-json-server:1.1.1'
 
 ## Quick Start
 
-### a. ra-spring-data-provider (Recommended)
-
-This approach uses efficient bulk operations with single requests containing multiple ID parameters.
+This library uses efficient bulk operations with single requests containing multiple ID parameters.
 
 <details>
 <summary>Click to expand setup instructions</summary>
@@ -291,189 +288,6 @@ public class WebConfig {
 
 </details>
 
-### b. ra-data-json-server
-
-This approach uses the standard JSON Server protocol where bulk operations send multiple individual requests. So, [starting with ra-spring-data-provider](#a-ra-spring-data-provider-recommended) is recommened.
-
-<details>
-<summary>Click to expand setup instructions</summary>
-
-#### 1. Install ra-data-json-server
-
-Install the React Admin JSON Server data provider:
-
-```bash
-npm install ra-data-json-server
-```
-
-or
-
-```bash
-yarn add ra-data-json-server
-```
-
-#### 2. Configure React Admin Frontend
-
-```javascript
-import { Admin, Resource, ListGuesser } from "react-admin";
-import jsonServerProvider from "ra-data-json-server";
-
-const dataProvider = jsonServerProvider("http://localhost:8080/api");
-
-const App = () => (
-  <Admin dataProvider={dataProvider}>
-    <Resource name="users" list={ListGuesser} />
-  </Admin>
-);
-
-export default App;
-```
-
-#### 3. Create Your Entity
-
-```java
-@Entity
-@Table(name = "users")
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    private String name;
-    private String email;
-    private String role;
-}
-```
-
-#### 4. Create Your Repository
-
-```java
-@Repository
-public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
-}
-```
-
-#### 5. Implement the Service
-
-```java
-@Service
-public class UserService implements IRAServiceJS<User, Long> {
-    private UserRepository userRepository;
-
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
-
-    @Override
-    public Page<User> findWithFilters(Map<String, String> filters, String q, Pageable pageable) {
-        Specification<User> spec = (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            // Apply field-specific filters
-            if (filters != null) {
-                filters.forEach((field, value) -> {
-                    if (value != null && !value.isEmpty()) {
-                        predicates.add(criteriaBuilder.equal(root.get(field), value));
-                    }
-                });
-            }
-
-            // Apply global search
-            if (q != null && !q.isEmpty()) {
-                String pattern = "%" + q.toLowerCase() + "%";
-                Predicate namePredicate = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("name")), pattern);
-                Predicate emailPredicate = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("email")), pattern);
-                predicates.add(criteriaBuilder.or(namePredicate, emailPredicate));
-            }
-
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-        };
-
-        return userRepository.findAll(spec, pageable);
-    }
-
-    @Override
-    public List<User> findAllById(Iterable<Long> ids) {
-        return userRepository.findAllById(ids);
-    }
-
-    @Override
-    public User findById(Long id) {
-        return userRepository.findById(id).orElse(null);
-    }
-
-    @Override
-    public User save(User entity) {
-        return userRepository.save(entity);
-    }
-
-    @Override
-    public User update(Long id, Map<String, Object> fields) {
-        User user = findById(id);
-        if (user == null) return null;
-
-        fields.forEach((key, value) -> {
-            switch (key) {
-                case "name" -> user.setName((String) value);
-                case "email" -> user.setEmail((String) value);
-                case "role" -> user.setRole((String) value);
-            }
-        });
-
-        return userRepository.save(user);
-    }
-
-    @Override
-    public void deleteById(Long id) {
-        userRepository.deleteById(id);
-    }
-}
-```
-
-#### 6. Create Your Controller
-
-```java
-@RestController
-@RequestMapping("/api/users") // resource name: users
-@CrossOrigin(origins = "*")
-public class UserController extends RAControllerJS<User, Long> {
-    private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-
-    @Override
-    protected IRAServiceJS<User, Long> getService() {
-        return userService;
-    }
-}
-```
-
-#### 7. Configure CORS (if needed)
-
-```java
-@Configuration
-public class WebConfig {
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/api/**")
-                        .allowedOrigins("*")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
-                        .exposedHeaders("Content-Range", "X-Total-Count"); // for pagination
-            }
-        };
-    }
-}
-```
-
-</details>
-
 ## Usage
 
 ### Basic Setup
@@ -560,9 +374,7 @@ public Page<User> findWithFilters(Map<String, String> filters, String q, Pageabl
 | PUT    | `/{resource}?id=1&id=2` | `updateMany`       | Update multiple records (bulk)  |
 | DELETE | `/{resource}?id=1&id=2` | `deleteMany`       | Delete multiple records (bulk)  |
 
-**Note:** The [ra-spring-data-provider][ra-spring-data-provider] sends single requests with multiple `id` query parameters for bulk operations (updateMany and deleteMany), making them more efficient than the [ra-data-json-server][ra-data-json-server] approach, which sends individual requests for each record.
-
-**Note:** For [ra-data-json-server] clients `IRAControllerJS` should be inherited instead of `IRAController`
+**Note:** The [ra-spring-data-provider][ra-spring-data-provider] sends single requests with multiple `id` query parameters for bulk operations (updateMany and deleteMany), based on the [ra-data-json-server] protocol specification.
 
 ### Query Parameters
 
@@ -630,3 +442,4 @@ You may choose either license for your use of this library.
 [react-admin-docs]: https://marmelab.com/react-admin/Tutorial.html
 [react-admin-dataproviders]: https://marmelab.com/react-admin/DataProviders.html
 [spring-boot-docs]: https://spring.io/projects/spring-boot
+[integration-test-files]: https://github.com/femrek/ra-spring-json-server/tree/main/ra-spring-json-server/src/test/java/dev/femrek/reactadmindataprovider/integration
