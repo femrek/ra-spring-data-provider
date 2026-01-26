@@ -18,7 +18,7 @@ import java.util.stream.StreamSupport;
  * for batch processing of entities.
  */
 @Service
-public class UserService implements IRAService<UserResponseDTO, UserCreateDTO, Long> {
+class UserService implements IRAService<UserResponseDTO, UserCreateDTO, Long> {
     private final UserRepository userRepository;
 
     public UserService(UserRepository userRepository) {

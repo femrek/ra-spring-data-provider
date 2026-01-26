@@ -5,7 +5,8 @@ package dev.femrek.reactadmindataprovider.unit;
  * This class contains all user fields including the ID,
  * used for API responses when returning user data.
  */
-public class UserResponseDTO {
+@SuppressWarnings("unused")
+class UserResponseDTO {
     private Long id;
     private String name;
     private String email;

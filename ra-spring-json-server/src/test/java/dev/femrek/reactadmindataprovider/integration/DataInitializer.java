@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Profile({"test", "dev"})
-public class DataInitializer implements CommandLineRunner {
+class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
 

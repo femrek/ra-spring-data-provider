@@ -1,16 +1,96 @@
 package dev.femrek.reactadmindataprovider.controller;
 
-import dev.femrek.reactadmindataprovider.jsonserver.controller.IRAControllerJS;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
-public interface IRAController<T, C, ID> extends IRAControllerJS<T, C, ID> {
+/**
+ * Interface defining REST endpoints compatible with ra-spring-data-provider.
+ * This controller provides a unified API for CRUD operations that seamlessly integrates
+ * with ra-spring-data-provider's expectations, including support for pagination,
+ * sorting, filtering, and bulk operations.
+ *
+ * @param <T>  the Response DTO type for this resource
+ * @param <C>  the Create DTO type for this resource
+ * @param <ID> the type of the entity's identifier
+ */
+public interface IRAController<T, C, ID> {
+    /**
+     * Retrieves a list of entities with support for pagination, sorting, filtering, and multiple query modes.
+     * This unified endpoint handles three ra-data-json-server operations:
+     * <ol>
+     *   <li><b>getList</b>: Standard paginated list with sorting and filtering</li>
+     *   <li><b>getMany</b>: Retrieves multiple specific entities when 'id' parameter is present</li>
+     *   <li><b>getManyReference</b>: Retrieves entities referencing another entity (via custom filters in allParams)</li>
+     * </ol>
+     *
+     * <p>The response should include appropriate headers for ra-data-json-server compatibility,
+     * particularly the Content-Range header for pagination support (e.g., "Content-Range: entities 0-9/100").</p>
+     *
+     * @param _start    the starting index for pagination (0-based, default: 0)
+     * @param _end      the ending index for pagination (exclusive, default: 10)
+     * @param _sort     the field name to sort by (default: "id")
+     * @param _order    the sort direction, either "ASC" or "DESC" (default: "ASC")
+     * @param id        optional list of specific entity IDs to retrieve (for getMany operation)
+     * @param q         optional search query string for text-based filtering across multiple fields
+     * @param allParams map containing all query parameters, used for custom filtering and getManyReference
+     * @return ResponseEntity containing a list of entities matching the criteria
+     */
+    @GetMapping
+    ResponseEntity<List<T>> getList(
+            @RequestParam(required = false, defaultValue = "0") int _start,
+            @RequestParam(required = false, defaultValue = "10") int _end,
+            @RequestParam(required = false, defaultValue = "id") String _sort,
+            @RequestParam(required = false, defaultValue = "ASC") String _order,
+            @RequestParam(required = false) List<ID> id,
+            @RequestParam(required = false) String q,
+            @RequestParam Map<String, String> allParams
+    );
+
+    /**
+     * Retrieves a single entity by its identifier.
+     * This endpoint implements ra-data-json-server's getOne operation.
+     *
+     * @param id the unique identifier of the entity to retrieve
+     * @return ResponseEntity containing the requested entity
+     */
+    @GetMapping("/{id}")
+    ResponseEntity<T> getOne(@PathVariable ID id);
+
+    /**
+     * Creates a new entity.
+     * This endpoint implements ra-data-json-server's create operation.
+     *
+     * @param data the request body for the new entity to create
+     * @return ResponseEntity containing the created entity with generated ID and any server-side defaults,
+     * typically with HTTP status 201 Created
+     */
+    @PostMapping
+    ResponseEntity<?> create(@RequestBody C data);
+
+    /**
+     * Updates an existing entity with the provided fields.
+     * This endpoint implements ra-data-json-server's update operation with support for partial updates.
+     *
+     * @param id     the unique identifier of the entity to update
+     * @param fields map of field names to new values; only provided fields should be updated
+     * @return ResponseEntity containing the updated entity
+     */
+    @PutMapping("/{id}")
+    ResponseEntity<?> update(@PathVariable ID id, @RequestBody Map<String, Object> fields);
+
+    /**
+     * Deletes a single entity by its identifier.
+     * This endpoint implements ra-data-json-server's delete operation.
+     *
+     * @param id the unique identifier of the entity to delete
+     * @return ResponseEntity with no content (204 No Content)
+     */
+    @DeleteMapping("/{id}")
+    ResponseEntity<?> delete(@PathVariable ID id);
+
     /**
      * Updates multiple entities with the same field values in a single operation.
      * This endpoint implements ra-data-json-server's updateMany operation for bulk updates.

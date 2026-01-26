@@ -1,10 +1,6 @@
-package dev.femrek.reactadmindataprovider.unit.jsonserver;
+package dev.femrek.reactadmindataprovider.unit;
 
 import dev.femrek.reactadmindataprovider.service.IRAService;
-import dev.femrek.reactadmindataprovider.unit.User;
-import dev.femrek.reactadmindataprovider.unit.UserCreateDTO;
-import dev.femrek.reactadmindataprovider.unit.UserRepository;
-import dev.femrek.reactadmindataprovider.unit.UserResponseDTO;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,10 +18,10 @@ import java.util.stream.StreamSupport;
  * for batch processing of entities.
  */
 @Service
-public class UserServiceJS implements IRAService<UserResponseDTO, UserCreateDTO, Long> {
+class UserService implements IRAService<UserResponseDTO, UserCreateDTO, Long> {
     private final UserRepository userRepository;
 
-    public UserServiceJS(UserRepository userRepository) {
+    public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 

@@ -5,7 +5,8 @@ package dev.femrek.reactadmindataprovider.integration;
  * This class contains the required fields for user creation,
  * excluding the auto-generated ID field.
  */
-public class UserCreateDTO {
+@SuppressWarnings("unused")
+class UserCreateDTO {
     private String name;
     private String email;
     private String role;

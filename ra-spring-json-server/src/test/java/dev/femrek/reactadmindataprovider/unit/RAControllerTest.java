@@ -1,7 +1,5 @@
-package dev.femrek.reactadmindataprovider.unit.product;
+package dev.femrek.reactadmindataprovider.unit;
 
-import dev.femrek.reactadmindataprovider.unit.TestApplication;
-import dev.femrek.reactadmindataprovider.unit.UserRepository;
 import okhttp3.*;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +16,8 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Integration tests for RAControllerJSExtended using real HTTP requests via OkHttp.
- * Tests all endpoints including the extended updateMany and deleteMany operations.
+ * Integration tests for RAController using real HTTP requests via OkHttp.
+ * Tests all endpoints.
  * No mocking is used - all tests make actual HTTP calls to the running Spring Boot server.
  */
 @SpringBootTest(classes = TestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -46,7 +44,7 @@ class RAControllerTest {
     private static Long createdUserId5;
 
     private String baseUrl() {
-        return "http://localhost:" + port + "/api/users-extended";
+        return "http://localhost:" + port + "/api/users";
     }
 
     private HttpUrl baseHttpUrl() {
@@ -67,7 +65,7 @@ class RAControllerTest {
 
     @Test
     @Order(1)
-    @DisplayName("POST /api/users-extended - Create first user")
+    @DisplayName("POST /api/users - Create first user")
     void testCreate() throws IOException {
         Map<String, String> newUser = new HashMap<>();
         newUser.put("name", "John Doe");
@@ -97,7 +95,7 @@ class RAControllerTest {
 
     @Test
     @Order(2)
-    @DisplayName("POST /api/users-extended - Create additional users for bulk tests")
+    @DisplayName("POST /api/users - Create additional users for bulk tests")
     void testCreateAdditionalUsers() throws IOException {
         String[][] users = {
                 {"Jane Smith", "jane.smith@example.com", "user"},
@@ -136,7 +134,7 @@ class RAControllerTest {
 
     @Test
     @Order(3)
-    @DisplayName("GET /api/users-extended/{id} - Get a single user by ID")
+    @DisplayName("GET /api/users/{id} - Get a single user by ID")
     void testGetOne() throws IOException {
         Request request = new Request.Builder()
                 .url(baseUrl() + "/" + createdUserId1)
@@ -160,7 +158,7 @@ class RAControllerTest {
 
     @Test
     @Order(4)
-    @DisplayName("GET /api/users-extended - Get list with pagination")
+    @DisplayName("GET /api/users - Get list with pagination")
     void testGetListWithPagination() throws IOException {
         HttpUrl url = baseHttpUrl().newBuilder()
                 .addQueryParameter("_start", "0")
@@ -186,7 +184,7 @@ class RAControllerTest {
 
     @Test
     @Order(5)
-    @DisplayName("GET /api/users-extended?role=user - Get list with field filter")
+    @DisplayName("GET /api/users?role=user - Get list with field filter")
     void testGetListWithFilter() throws IOException {
         HttpUrl url = baseHttpUrl().newBuilder()
                 .addQueryParameter("_start", "0")
@@ -216,7 +214,7 @@ class RAControllerTest {
 
     @Test
     @Order(6)
-    @DisplayName("GET /api/users-extended?q=Alice - Get list with global search")
+    @DisplayName("GET /api/users?q=Alice - Get list with global search")
     void testGetListWithGlobalSearch() throws IOException {
         HttpUrl url = baseHttpUrl().newBuilder()
                 .addQueryParameter("_start", "0")
@@ -245,7 +243,7 @@ class RAControllerTest {
 
     @Test
     @Order(7)
-    @DisplayName("GET /api/users-extended?id=1&id=2&id=3 - Get multiple users by IDs")
+    @DisplayName("GET /api/users?id=1&id=2&id=3 - Get multiple users by IDs")
     void testGetMany() throws IOException {
         HttpUrl url = baseHttpUrl().newBuilder()
                 .addQueryParameter("id", createdUserId1.toString())
@@ -271,7 +269,7 @@ class RAControllerTest {
 
     @Test
     @Order(8)
-    @DisplayName("PUT /api/users-extended/{id} - Update a single user")
+    @DisplayName("PUT /api/users/{id} - Update a single user")
     void testUpdate() throws IOException {
         Map<String, String> updates = new HashMap<>();
         updates.put("role", "superadmin");
@@ -297,7 +295,7 @@ class RAControllerTest {
 
     @Test
     @Order(9)
-    @DisplayName("PUT /api/users-extended/{id} - Partial update (only one field)")
+    @DisplayName("PUT /api/users/{id} - Partial update (only one field)")
     void testPartialUpdate() throws IOException {
         Map<String, String> updates = new HashMap<>();
         updates.put("email", "john.updated@example.com");
@@ -323,7 +321,7 @@ class RAControllerTest {
 
     @Test
     @Order(10)
-    @DisplayName("PUT /api/users-extended?id=2&id=3 - Update multiple users with same values")
+    @DisplayName("PUT /api/users?id=2&id=3 - Update multiple users with same values")
     void testUpdateMany() throws IOException {
         Map<String, String> updates = new HashMap<>();
         updates.put("role", "premium_user");
@@ -380,7 +378,7 @@ class RAControllerTest {
 
     @Test
     @Order(11)
-    @DisplayName("PUT /api/users-extended?id=4&id=5 - Update multiple users with same role")
+    @DisplayName("PUT /api/users?id=4&id=5 - Update multiple users with same role")
     void testUpdateManyMultipleFields() throws IOException {
         Map<String, String> updates = new HashMap<>();
         updates.put("role", "vip_user");
@@ -435,7 +433,7 @@ class RAControllerTest {
 
     @Test
     @Order(12)
-    @DisplayName("PUT /api/users-extended - Update many with empty ID list returns empty list")
+    @DisplayName("PUT /api/users - Update many with empty ID list returns empty list")
     void testUpdateManyEmptyList() throws IOException {
         Map<String, String> updates = new HashMap<>();
         updates.put("role", "test");
@@ -462,7 +460,7 @@ class RAControllerTest {
 
     @Test
     @Order(13)
-    @DisplayName("DELETE /api/users-extended/{id} - Delete a single user")
+    @DisplayName("DELETE /api/users/{id} - Delete a single user")
     void testDelete() throws IOException {
         // Create a user specifically for deletion
         Map<String, String> userToDelete = new HashMap<>();
@@ -503,7 +501,7 @@ class RAControllerTest {
 
     @Test
     @Order(14)
-    @DisplayName("DELETE /api/users-extended?id=4&id=5 - Delete multiple users")
+    @DisplayName("DELETE /api/users?id=4&id=5 - Delete multiple users")
     void testDeleteMany() throws IOException {
         HttpUrl url = baseHttpUrl().newBuilder()
                 .addQueryParameter("id", createdUserId4.toString())
@@ -542,7 +540,7 @@ class RAControllerTest {
 
     @Test
     @Order(15)
-    @DisplayName("DELETE /api/users-extended - Delete many with empty ID list returns empty list")
+    @DisplayName("DELETE /api/users - Delete many with empty ID list returns empty list")
     void testDeleteManyEmptyList() throws IOException {
         Request request = new Request.Builder()
                 .url(baseUrl())
@@ -563,7 +561,7 @@ class RAControllerTest {
 
     @Test
     @Order(16)
-    @DisplayName("DELETE /api/users-extended?id=1&id=2&id=3 - Delete multiple users at once")
+    @DisplayName("DELETE /api/users?id=1&id=2&id=3 - Delete multiple users at once")
     void testDeleteManyBulk() throws IOException {
         // Create 3 users specifically for bulk deletion
         Long[] deleteIds = new Long[3];
@@ -620,7 +618,7 @@ class RAControllerTest {
 
     @Test
     @Order(17)
-    @DisplayName("GET /api/users-extended/{id} - Get non-existent user returns error")
+    @DisplayName("GET /api/users/{id} - Get non-existent user returns error")
     void testGetOneNotFound() throws IOException {
         Request request = new Request.Builder()
                 .url(baseUrl() + "/99999")
@@ -634,7 +632,7 @@ class RAControllerTest {
 
     @Test
     @Order(18)
-    @DisplayName("PUT /api/users-extended/{id} - Update non-existent user returns error")
+    @DisplayName("PUT /api/users/{id} - Update non-existent user returns error")
     void testUpdateNonExistentUser() throws IOException {
         Map<String, String> updates = new HashMap<>();
         updates.put("role", "admin");
@@ -652,7 +650,7 @@ class RAControllerTest {
 
     @Test
     @Order(19)
-    @DisplayName("GET /api/users-extended - Verify X-Total-Count header is present")
+    @DisplayName("GET /api/users - Verify X-Total-Count header is present")
     void testGetListWithTotalCountHeader() throws IOException {
         HttpUrl url = baseHttpUrl().newBuilder()
                 .addQueryParameter("_start", "0")
@@ -673,7 +671,7 @@ class RAControllerTest {
 
     @Test
     @Order(20)
-    @DisplayName("GET /api/users-extended - Test pagination with offset")
+    @DisplayName("GET /api/users - Test pagination with offset")
     void testGetListWithOffset() throws IOException {
         HttpUrl url = baseHttpUrl().newBuilder()
                 .addQueryParameter("_start", "1")
@@ -698,7 +696,7 @@ class RAControllerTest {
 
     @Test
     @Order(21)
-    @DisplayName("GET /api/users-extended - Empty pagination parameters use defaults")
+    @DisplayName("GET /api/users - Empty pagination parameters use defaults")
     void testGetListWithDefaultParameters() throws IOException {
         Request request = new Request.Builder().url(baseUrl()).get().build();
 
