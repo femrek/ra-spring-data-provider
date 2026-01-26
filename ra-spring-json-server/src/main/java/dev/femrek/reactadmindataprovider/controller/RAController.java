@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Collections;
 import java.util.List;
@@ -31,7 +32,7 @@ public abstract class RAController<T, C, ID> implements IRAController<T, C, ID> 
     protected abstract IRAService<T, C, ID> getService();
 
     private static final List<String> RESERVED_PARAMS = List.of(
-            "_start", "_end", "_sort", "_order", "q", "id", "_embed"
+            "_start", "_end", "_sort", "_order", "_embed", "id"
     );
 
     @Override
@@ -40,8 +41,8 @@ public abstract class RAController<T, C, ID> implements IRAController<T, C, ID> 
             int _end,
             String _sort,
             String _order,
+            String _embed,
             List<ID> id,
-            String q,
             Map<String, String> allParams
     ) {
         // 1. Handle "getMany" (Fetch by specific IDs)
@@ -49,27 +50,31 @@ public abstract class RAController<T, C, ID> implements IRAController<T, C, ID> 
             return ResponseEntity.ok(getService().findAllById(id));
         }
 
-        // 2. Calculate Pagination
-        int pageSize = _end - _start;
-        if (pageSize <= 0) pageSize = 10;
-        int pageNumber = _start / pageSize;
+        // 2. Validate Pagination Parameters if "getList"
+        if (_start < 0 || _end < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "_start and _end parameters are null or smaller than 0. These parameters are required for `getList` operation.");
+        } else if (_end <= _start) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "_end parameter must be greater than _start parameter.");
+        }
 
+        // 3. Calculate Pagination
+        int pageSize = _end - _start;
+        int pageNumber = _start / pageSize;
         Sort sort = Sort.by(Sort.Direction.fromString(_order), _sort);
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
 
-        // 3. Clean up filters
-        // check if _embed is present to avoid issues with JPA specifications
-        if (allParams.containsKey("_embed")) {
-            log.warn("The '_embed' parameter is not supported and will be ignored.");
+        // 4. Handle _embed Parameter
+        if (_embed != null) {
+            log.warn("_embed parameter is not supported and will be ignored.");
         }
 
-        // We remove the protocol params so only actual filters (like "status", "authorId") remain
+        // 5. Fetch Data
         RESERVED_PARAMS.forEach(allParams.keySet()::remove);
+        Page<T> pageResult = getService().findWithFilters(allParams, pageable);
 
-        // 4. Fetch Data
-        Page<T> pageResult = getService().findWithFilters(allParams, q, pageable);
-
-        // 5. Set Headers
+        // 6. Set Headers
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", String.valueOf(pageResult.getTotalElements()));
         headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "X-Total-Count");

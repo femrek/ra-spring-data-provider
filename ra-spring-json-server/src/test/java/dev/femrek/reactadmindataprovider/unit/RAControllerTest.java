@@ -696,12 +696,12 @@ class RAControllerTest {
 
     @Test
     @Order(21)
-    @DisplayName("GET /api/users - Empty pagination parameters use defaults")
+    @DisplayName("GET /api/users - Empty pagination parameters for getList returns bad request")
     void testGetListWithDefaultParameters() throws IOException {
         Request request = new Request.Builder().url(baseUrl()).get().build();
 
         try (Response response = client.newCall(request).execute()) {
-            assertEquals(200, response.code());
+            assertEquals(400, response.code());
             assertNotNull(response.body());
 
             List<Map<String, Object>> responseBody = objectMapper.readValue(

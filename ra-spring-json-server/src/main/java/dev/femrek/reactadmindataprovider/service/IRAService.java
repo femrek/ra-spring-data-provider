@@ -20,11 +20,10 @@ public interface IRAService<T, C, ID> {
      * Finds entities matching the given filters and global search query.
      *
      * @param filters  A map of field names to values (e.g., "status" -> "active").
-     * @param q        The global search string (optional).
      * @param pageable Pagination and sorting information.
      * @return A page of entities.
      */
-    Page<T> findWithFilters(Map<String, String> filters, String q, Pageable pageable);
+    Page<T> findWithFilters(Map<String, String> filters, Pageable pageable);
 
     /**
      * Retrieves all entities by their IDs.

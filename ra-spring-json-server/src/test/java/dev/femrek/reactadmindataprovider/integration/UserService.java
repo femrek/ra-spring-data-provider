@@ -26,27 +26,29 @@ class UserService implements IRAService<UserResponseDTO, UserCreateDTO, Long> {
     }
 
     @Override
-    public Page<UserResponseDTO> findWithFilters(Map<String, String> filters, String q, Pageable pageable) {
+    public Page<UserResponseDTO> findWithFilters(Map<String, String> filters, Pageable pageable) {
         Specification<User> spec = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             // Apply field-specific filters
             if (filters != null) {
+                // Apply global search query (q parameter)
+                String q = filters.remove("q");
+                if (q != null && !q.isEmpty()) {
+                    String searchPattern = "%" + q.toLowerCase() + "%";
+                    Predicate namePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), searchPattern);
+                    Predicate emailPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), searchPattern);
+                    Predicate rolePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("role")), searchPattern);
+
+                    predicates.add(criteriaBuilder.or(namePredicate, emailPredicate, rolePredicate));
+                }
+
+                // Apply field filters
                 filters.forEach((field, value) -> {
                     if (value != null && !value.isEmpty()) {
                         predicates.add(criteriaBuilder.equal(root.get(field), value));
                     }
                 });
-            }
-
-            // Apply global search query (q parameter)
-            if (q != null && !q.isEmpty()) {
-                String searchPattern = "%" + q.toLowerCase() + "%";
-                Predicate namePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), searchPattern);
-                Predicate emailPredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), searchPattern);
-                Predicate rolePredicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("role")), searchPattern);
-
-                predicates.add(criteriaBuilder.or(namePredicate, emailPredicate, rolePredicate));
             }
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
