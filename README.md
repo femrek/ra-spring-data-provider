@@ -48,9 +48,9 @@ This library bridges the gap between Spring Boot applications and React Admin fr
 
 ## Installation
 
-### Maven
+### Backend
 
-Add the dependency to your `pom.xml`:
+Add the dependency to your `pom.xml` if you use Maven:
 
 ```xml
 <dependency>
@@ -60,12 +60,18 @@ Add the dependency to your `pom.xml`:
 </dependency>
 ```
 
-### Gradle
-
-Add the dependency to your `build.gradle`:
+Add the dependency to your `build.gradle` if you use Gradle:
 
 ```gradle
 implementation 'dev.femrek:ra-spring-json-server:1.2.0'
+```
+
+### Frontend
+
+Run following shell script to add the data provider:
+
+```bash
+npm install ra-spring-data-provider
 ```
 
 ## Quick Start

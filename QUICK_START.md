@@ -5,7 +5,7 @@ This guide will help you set up a React Admin backend using the ra-spring-json-s
 ## Prerequisites
 
 - Java 17 or higher
-- Spring Boot 4 or higher
+- Spring Boot (4 or higher recommended)
 - Maven or Gradle
 - Node.js and npm/yarn (for frontend)
 
