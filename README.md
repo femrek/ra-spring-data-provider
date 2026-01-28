@@ -35,7 +35,8 @@ This library bridges the gap between Spring Boot applications and React Admin fr
 - ✅ **Complete CRUD Operations**: GET, CREATE, UPDATE, DELETE operations with efficient bulk support
 - ✅ **Pagination & Sorting**: Built-in support for paginated responses and multi-field sorting
 - ✅ **Advanced Filtering**: Field-specific filters and global search queries
-- ✅ **Type-Safe**: Generics support for any entity type
+- ✅ **Type-Safe**: Generics support with separate DTOs for requests and responses
+- ✅ **Flexible Data Mapping**: Use DTOs to control exactly what data is exposed in your API
 
 ## Requirements
 
@@ -128,24 +129,57 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 }
 ```
 
-#### 5. Implement the Service
+#### 5. Create DTOs
+
+```java
+// UserCreateDTO.java - for creating users
+public class UserCreateDTO {
+    private String name;
+    private String email;
+    private String role;
+    // getters and setters
+}
+
+// UserResponseDTO.java - for returning user data
+public class UserResponseDTO {
+    private Long id;
+    private String name;
+    private String email;
+    private String role;
+    // getters and setters
+}
+```
+
+#### 6. Implement the Service
 
 ```java
 @Service
-public class UserService implements IRAService<User, Long> {
-    private UserRepository userRepository;
+public class UserService implements IRAService<UserResponseDTO, UserCreateDTO, Long> {
+    private final UserRepository userRepository;
 
     public UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
     @Override
-    public Page<User> findWithFilters(Map<String, String> filters, String q, Pageable pageable) {
+    public Page<UserResponseDTO> findWithFilters(Map<String, String> filters, Pageable pageable) {
         Specification<User> spec = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             // Apply field-specific filters
             if (filters != null) {
+                // Extract and apply global search query (q parameter)
+                String q = filters.remove("q");
+                if (q != null && !q.isEmpty()) {
+                    String pattern = "%" + q.toLowerCase() + "%";
+                    Predicate namePredicate = criteriaBuilder.like(
+                            criteriaBuilder.lower(root.get("name")), pattern);
+                    Predicate emailPredicate = criteriaBuilder.like(
+                            criteriaBuilder.lower(root.get("email")), pattern);
+                    predicates.add(criteriaBuilder.or(namePredicate, emailPredicate));
+                }
+
+                // Apply remaining field filters
                 filters.forEach((field, value) -> {
                     if (value != null && !value.isEmpty()) {
                         predicates.add(criteriaBuilder.equal(root.get(field), value));
@@ -153,56 +187,95 @@ public class UserService implements IRAService<User, Long> {
                 });
             }
 
-            // Apply global search
-            if (q != null && !q.isEmpty()) {
-                String pattern = "%" + q.toLowerCase() + "%";
-                Predicate namePredicate = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("name")), pattern);
-                Predicate emailPredicate = criteriaBuilder.like(
-                        criteriaBuilder.lower(root.get("email")), pattern);
-                predicates.add(criteriaBuilder.or(namePredicate, emailPredicate));
-            }
-
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
 
-        return userRepository.findAll(spec, pageable);
+        Page<User> entities = userRepository.findAll(spec, pageable);
+        return entities.map(entity -> {
+            UserResponseDTO dto = new UserResponseDTO();
+            dto.setId(entity.getId());
+            dto.setName(entity.getName());
+            dto.setEmail(entity.getEmail());
+            dto.setRole(entity.getRole());
+            return dto;
+        });
     }
 
     @Override
-    public List<User> findAllById(Iterable<Long> ids) {
-        return userRepository.findAllById(ids);
+    public List<UserResponseDTO> findAllById(Iterable<Long> ids) {
+        List<User> entities = userRepository.findAllById(ids);
+        List<UserResponseDTO> results = new ArrayList<>();
+        for (User entity : entities) {
+            UserResponseDTO dto = new UserResponseDTO();
+            dto.setId(entity.getId());
+            dto.setName(entity.getName());
+            dto.setEmail(entity.getEmail());
+            dto.setRole(entity.getRole());
+            results.add(dto);
+        }
+        return results;
     }
 
     @Override
-    public User findById(Long id) {
-        return userRepository.findById(id).orElse(null);
+    public UserResponseDTO findById(Long id) {
+        User entity = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+        UserResponseDTO dto = new UserResponseDTO();
+        dto.setId(entity.getId());
+        dto.setName(entity.getName());
+        dto.setEmail(entity.getEmail());
+        dto.setRole(entity.getRole());
+        return dto;
     }
 
     @Override
-    public User save(User entity) {
-        return userRepository.save(entity);
+    public UserResponseDTO create(UserCreateDTO data) {
+        User user = new User();
+        user.setName(data.getName());
+        user.setEmail(data.getEmail());
+        user.setRole(data.getRole());
+
+        User savedUser = userRepository.save(user);
+        UserResponseDTO dto = new UserResponseDTO();
+        dto.setId(savedUser.getId());
+        dto.setName(savedUser.getName());
+        dto.setEmail(savedUser.getEmail());
+        dto.setRole(savedUser.getRole());
+        return dto;
     }
 
     @Override
-    public User update(Long id, Map<String, Object> fields) {
-        User user = findById(id);
-        if (user == null) return null;
+    public UserResponseDTO update(Long id, Map<String, Object> fields) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
 
         fields.forEach((key, value) -> {
             switch (key) {
-                case "name" -> user.setName((String) value);
-                case "email" -> user.setEmail((String) value);
-                case "role" -> user.setRole((String) value);
+                case "name":
+                    user.setName((String) value);
+                    break;
+                case "email":
+                    user.setEmail((String) value);
+                    break;
+                case "role":
+                    user.setRole((String) value);
+                    break;
             }
         });
 
-        return userRepository.save(user);
+        User updatedUser = userRepository.save(user);
+        UserResponseDTO dto = new UserResponseDTO();
+        dto.setId(updatedUser.getId());
+        dto.setName(updatedUser.getName());
+        dto.setEmail(updatedUser.getEmail());
+        dto.setRole(updatedUser.getRole());
+        return dto;
     }
 
     @Override
-    public void deleteById(Long id) {
+    public Void deleteById(Long id) {
         userRepository.deleteById(id);
+        return null;
     }
 
     @Override
@@ -216,9 +289,15 @@ public class UserService implements IRAService<User, Long> {
         for (User user : users) {
             fields.forEach((key, value) -> {
                 switch (key) {
-                    case "name" -> user.setName((String) value);
-                    case "email" -> user.setEmail((String) value);
-                    case "role" -> user.setRole((String) value);
+                    case "name":
+                        user.setName((String) value);
+                        break;
+                    case "email":
+                        user.setEmail((String) value);
+                        break;
+                    case "role":
+                        user.setRole((String) value);
+                        break;
                 }
             });
             User savedUser = userRepository.save(user);
@@ -230,12 +309,8 @@ public class UserService implements IRAService<User, Long> {
 
     @Override
     public List<Long> deleteMany(Iterable<Long> ids) {
-        List<Long> deletedIds = new ArrayList<>();
-
-        // Collect the IDs before deletion
-        for (Long id : ids) {
-            deletedIds.add(id);
-        }
+        List<Long> deletedIds = StreamSupport.stream(ids.spliterator(), false)
+                .toList();
 
         // Delete all users by their IDs
         userRepository.deleteAllById(ids);
@@ -245,13 +320,13 @@ public class UserService implements IRAService<User, Long> {
 }
 ```
 
-#### 6. Create Your Controller
+#### 7. Create Your Controller
 
 ```java
 @RestController
 @RequestMapping("/api/users") // resource name: users
 @CrossOrigin(origins = "*")
-public class UserController extends RAController<User, Long> {
+public class UserController extends RAController<UserResponseDTO, UserCreateDTO, Long> {
     private final UserService userService;
 
     public UserController(UserService userService) {
@@ -259,13 +334,13 @@ public class UserController extends RAController<User, Long> {
     }
 
     @Override
-    protected IRAService<User, Long> getService() {
+    protected IRAService<UserResponseDTO, UserCreateDTO, Long> getService() {
         return userService;
     }
 }
 ```
 
-#### 7. Configure CORS (if needed)
+#### 8. Configure CORS (if needed)
 
 ```java
 @Configuration
@@ -294,12 +369,13 @@ public class WebConfig {
 
 The library provides two main components:
 
-1. **`RAController<T, ID>`**: Abstract controller that handles HTTP requests
-2. **`IRAService<T, ID>`**: Service interface for business logic
+1. **`RAController<ResponseDTO, CreateDTO, ID>`**: Abstract controller that handles HTTP requests
+2. **`IRAService<ResponseDTO, CreateDTO, ID>`**: Service interface for business logic
 
 Your implementation needs to:
 
-- Extend `RAController` for your entity
+- Create DTOs for request (CreateDTO) and response (ResponseDTO) data
+- Extend `RAController` with your DTO types
 - Implement `IRAService` for your business logic
 - Return your service implementation from the `getService()` method
 
@@ -307,18 +383,20 @@ Your implementation needs to:
 
 The `IRAService` interface requires you to implement:
 
-- **`findWithFilters()`**: Query with filters, search, pagination, and sorting
-- **`findAllById()`**: Fetch multiple records by IDs
-- **`findById()`**: Fetch a single record
-- **`save()`**: Create or update a record
-- **`update()`**: Partial update of a record
-- **`deleteById()`**: Delete a single record
+- **`findWithFilters()`**: Query with filters (including `q` for search), pagination, and sorting - returns Page<ResponseDTO>
+- **`findAllById()`**: Fetch multiple records by IDs - returns List<ResponseDTO>
+- **`findById()`**: Fetch a single record - returns ResponseDTO
+- **`create()`**: Create a new record from CreateDTO - returns ResponseDTO
+- **`update()`**: Partial update of a record using a Map of fields - returns ResponseDTO
+- **`deleteById()`**: Delete a single record - returns Void
+- **`updateMany()`**: Bulk update multiple records - returns List<ID>
+- **`deleteMany()`**: Bulk delete multiple records - returns List<ID>
 
 ### Advanced Filtering
 
 The `findWithFilters()` method receives:
 
-- **`filters`**: Map of field names to filter values (e.g., `{"role": "admin"}`)
+- **`filters`**: Map of field names to filter values (e.g., `{"role": "admin"}`) - may include a `"q"` key for global search, which must be handled manually in the service as shown in the Quick Start section.
 - **`pageable`**: Spring Data Pageable with pagination and sorting info
 
 Example implementation with JPA Specifications:
@@ -326,12 +404,22 @@ Example implementation with JPA Specifications:
 ```java
 
 @Override
-public Page<User> findWithFilters(Map<String, String> filters, String q, Pageable pageable) {
+public Page<UserResponseDTO> findWithFilters(Map<String, String> filters, Pageable pageable) {
     Specification<User> spec = (root, query, criteriaBuilder) -> {
         List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
 
-        // Field-specific filters
         if (filters != null) {
+            // Extract and handle global search query
+            String q = filters.remove("q");
+            if (q != null && !q.isEmpty()) {
+                String pattern = "%" + q.toLowerCase() + "%";
+                predicates.add(criteriaBuilder.or(
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), pattern),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), pattern)
+                ));
+            }
+
+            // Field-specific filters
             if (filters.containsKey("role")) {
                 predicates.add(criteriaBuilder.equal(
                         root.get("role"), filters.get("role")));
@@ -342,19 +430,18 @@ public Page<User> findWithFilters(Map<String, String> filters, String q, Pageabl
             }
         }
 
-        // Global search
-        if (q != null && !q.isEmpty()) {
-            String pattern = "%" + q.toLowerCase() + "%";
-            predicates.add(criteriaBuilder.or(
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), pattern),
-                    criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), pattern)
-            ));
-        }
-
         return criteriaBuilder.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
     };
 
-    return repository.findAll(spec, pageable);
+    Page<User> entities = repository.findAll(spec, pageable);
+    return entities.map(entity -> {
+        UserResponseDTO dto = new UserResponseDTO();
+        dto.setId(entity.getId());
+        dto.setName(entity.getName());
+        dto.setEmail(entity.getEmail());
+        dto.setRole(entity.getRole());
+        return dto;
+    });
 }
 ```
 
