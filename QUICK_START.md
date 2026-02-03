@@ -304,4 +304,4 @@ public class WebConfig {
 - Explore the [full documentation](README.md) for advanced usage
 - Learn about [advanced filtering](README.md#advanced-filtering)
 - Check out the [API endpoints](README.md#api-endpoints)
-- Review the [integration tests](https://github.com/femrek/ra-spring-json-server/tree/main/ra-spring-json-server/src/test/java/dev/femrek/reactadmindataprovider/integration) for more examples
+- Review the [integration tests](https://github.com/femrek/ra-spring-data-provider/tree/main/ra-spring-json-server/src/test/java/dev/femrek/reactadmindataprovider/integration) for more examples

@@ -90,4 +90,4 @@ This project is dual-licensed under:
 
 You may choose either license for your use of this library.
 
-[ra-spring-json-server]: https://github.com/femrek/ra-spring-json-server
+[ra-spring-json-server]: https://github.com/femrek/ra-spring-data-provider

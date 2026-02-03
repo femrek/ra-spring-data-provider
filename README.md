@@ -194,7 +194,7 @@ public Page<UserResponseDTO> findWithFilters(Map<String, String> filters, Pageab
 
 ```bash
 # Clone the repository
-git clone https://github.com/femrek/ra-spring-json-server.git
+git clone https://github.com/femrek/ra-spring-data-provider.git
 cd ra-spring-json-server
 
 # Build the project
@@ -237,7 +237,7 @@ You may choose either license for your use of this library.
 <!-- Link Definitions -->
 
 [react-admin]: https://marmelab.com/react-admin/
-[ra-spring-data-provider]: https://github.com/femrek/ra-spring-json-server/tree/main/ra-spring-data-provider
+[ra-spring-data-provider]: https://github.com/femrek/ra-spring-data-provider/tree/main/ra-spring-data-provider
 [ra-data-json-server]: https://github.com/marmelab/react-admin/tree/master/packages/ra-data-json-server
 [spring-boot]: https://spring.io/projects/spring-boot
 [license-apache]: LICENSE_APACHE
@@ -246,4 +246,4 @@ You may choose either license for your use of this library.
 [react-admin-docs]: https://marmelab.com/react-admin/Tutorial.html
 [react-admin-dataproviders]: https://marmelab.com/react-admin/DataProviders.html
 [spring-boot-docs]: https://spring.io/projects/spring-boot
-[integration-test-files]: https://github.com/femrek/ra-spring-json-server/tree/main/ra-spring-json-server/src/test/java/dev/femrek/reactadmindataprovider/integration
+[integration-test-files]: https://github.com/femrek/ra-spring-data-provider/tree/main/ra-spring-json-server/src/test/java/dev/femrek/reactadmindataprovider/integration
