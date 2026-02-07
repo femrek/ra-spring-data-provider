@@ -67,7 +67,7 @@ public interface IRAController<T, C, ID> {
      * typically with HTTP status 201 Created
      */
     @PostMapping
-    ResponseEntity<?> create(@RequestBody C data);
+    ResponseEntity<T> create(@RequestBody C data);
 
     /**
      * Updates an existing entity with the provided fields.
@@ -78,7 +78,7 @@ public interface IRAController<T, C, ID> {
      * @return ResponseEntity containing the updated entity
      */
     @PutMapping("/{id}")
-    ResponseEntity<?> update(@PathVariable ID id, @RequestBody Map<String, Object> fields);
+    ResponseEntity<T> update(@PathVariable ID id, @RequestBody Map<String, Object> fields);
 
     /**
      * Deletes a single entity by its identifier.
@@ -88,7 +88,7 @@ public interface IRAController<T, C, ID> {
      * @return ResponseEntity with no content (204 No Content)
      */
     @DeleteMapping("/{id}")
-    ResponseEntity<?> delete(@PathVariable ID id);
+    ResponseEntity<Void> delete(@PathVariable ID id);
 
     /**
      * Updates multiple entities with the same field values in a single operation.

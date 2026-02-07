@@ -88,12 +88,12 @@ public abstract class RAController<T, C, ID> implements IRAController<T, C, ID> 
     }
 
     @Override
-    public ResponseEntity<?> create(C data) {
+    public ResponseEntity<T> create(C data) {
         return ResponseEntity.status(HttpStatus.CREATED).body(getService().create(data));
     }
 
     @Override
-    public ResponseEntity<?> update(ID id, Map<String, Object> fields) {
+    public ResponseEntity<T> update(ID id, Map<String, Object> fields) {
         return ResponseEntity.ok(getService().update(id, fields));
     }
 
@@ -105,7 +105,7 @@ public abstract class RAController<T, C, ID> implements IRAController<T, C, ID> 
     }
 
     @Override
-    public ResponseEntity<?> delete(ID id) {
+    public ResponseEntity<Void> delete(ID id) {
         getService().deleteById(id);
         return ResponseEntity.noContent().build();
     }
