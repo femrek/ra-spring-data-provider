@@ -12,54 +12,58 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * REST controller for Post entity.
+ * Provides all standard CRUD operations plus getManyReference for filtering by userId.
+ */
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/posts")
 @CrossOrigin(origins = "*")
-class UserController extends RAController<UserResponseDTO, UserCreateDTO, Long> {
-    private static final Log log = LogFactory.getLog(UserController.class);
-    private final UserService userService;
+class PostController extends RAController<PostResponseDTO, PostCreateDTO, Long> {
+    private static final Log log = LogFactory.getLog(PostController.class);
+    private final PostService postService;
 
-    public UserController(UserService userService) {
-        this.userService = userService;
+    public PostController(PostService postService) {
+        this.postService = postService;
     }
 
     @Override
-    protected IRAService<UserResponseDTO, UserCreateDTO, Long> getService() {
-        return userService;
+    protected IRAService<PostResponseDTO, PostCreateDTO, Long> getService() {
+        return postService;
     }
 
     @Override
-    public ResponseEntity<List<UserResponseDTO>> getList(int _start, int _end, String _sort, String _order, String _embed, Map<String, String> allParams) {
+    public ResponseEntity<List<PostResponseDTO>> getList(int _start, int _end, String _sort, String _order, String _embed, Map<String, String> allParams) {
         log.info("Received getList request with params: " + allParams);
         return super.getList(_start, _end, _sort, _order, _embed, allParams);
     }
 
     @Override
-    public ResponseEntity<List<UserResponseDTO>> getMany(List<Long> id) {
+    public ResponseEntity<List<PostResponseDTO>> getMany(List<Long> id) {
         log.info("Received getMany request with ids: " + id);
         return super.getMany(id);
     }
 
     @Override
-    public ResponseEntity<List<UserResponseDTO>> getManyReference(String target, String targetId, int _start, int _end, String _sort, String _order, String _embed, Map<String, String> allParams) {
+    public ResponseEntity<List<PostResponseDTO>> getManyReference(String target, String targetId, int _start, int _end, String _sort, String _order, String _embed, Map<String, String> allParams) {
         log.info("Received getManyReference request with target: " + target + ", targetId: " + targetId + ", params: " + allParams);
         return super.getManyReference(target, targetId, _start, _end, _sort, _order, _embed, allParams);
     }
 
     @Override
-    public ResponseEntity<UserResponseDTO> getOne(Long id) {
+    public ResponseEntity<PostResponseDTO> getOne(Long id) {
         log.info("Received getOne request with id: " + id);
         return super.getOne(id);
     }
 
     @Override
-    public ResponseEntity<UserResponseDTO> create(UserCreateDTO data) {
+    public ResponseEntity<PostResponseDTO> create(PostCreateDTO data) {
         log.info("Received create request with data: " + data);
         return super.create(data);
     }
 
     @Override
-    public ResponseEntity<UserResponseDTO> update(Long id, Map<String, Object> fields) {
+    public ResponseEntity<PostResponseDTO> update(Long id, Map<String, Object> fields) {
         log.info("Received update request with id: " + id + ", fields: " + fields);
         return super.update(id, fields);
     }

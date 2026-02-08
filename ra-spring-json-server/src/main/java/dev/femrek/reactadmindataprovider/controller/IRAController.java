@@ -18,33 +18,111 @@ import java.util.Map;
  */
 public interface IRAController<T, C, ID> {
     /**
-     * Retrieves a list of entities with support for pagination, sorting, filtering, and multiple query modes.
-     * This unified endpoint handles three ra-data-json-server operations:
-     * <ol>
-     *   <li><b>getList</b>: Standard paginated list with sorting and filtering</li>
-     *   <li><b>getMany</b>: Retrieves multiple specific entities when 'id' parameter is present</li>
-     *   <li><b>getManyReference</b>: Retrieves entities referencing another entity (via custom filters in allParams)</li>
-     * </ol>
+     * Retrieves a paginated list of entities with support for sorting and filtering.
+     * This endpoint implements ra-data-json-server's <b>getList</b> operation.
      *
-     * <p>The response should include appropriate headers for ra-data-json-server compatibility,
-     * particularly the Content-Range header for pagination support (e.g., "Content-Range: entities 0-9/100").</p>
+     * <p>This method returns a subset of entities based on the pagination parameters (_start and _end).
+     * The results can be sorted by any field in ascending or descending order. Custom filters can be
+     * applied through additional query parameters passed in allParams.</p>
      *
-     * @param _start    the starting index for pagination (0-based) (required for getList)
-     * @param _end      the ending index for pagination (exclusive) (required for getList)
+     * <p><b>Example request:</b></p>
+     * <pre>GET /api/posts?_start=0&_end=10&_sort=title&_order=ASC&status=published</pre>
+     *
+     * <p>The response must include an <code>X-Total-Count</code> header containing the total number
+     * of entities matching the filter criteria (not just the current page). This header is essential
+     * for ra-data-json-server to calculate pagination correctly.</p>
+     *
+     * <p><b>Response headers:</b></p>
+     * <ul>
+     *   <li><code>X-Total-Count</code>: Total number of entities matching the filter</li>
+     *   <li><code>Access-Control-Expose-Headers</code>: Must include "X-Total-Count"</li>
+     * </ul>
+     *
+     * @param _start    the starting index for pagination (0-based, inclusive)
+     * @param _end      the ending index for pagination (0-based, exclusive)
      * @param _sort     the field name to sort by (default: "id")
      * @param _order    the sort direction, either "ASC" or "DESC" (default: "ASC")
-     * @param id        optional list of specific entity IDs to retrieve (for getMany operation)
-     * @param allParams map containing all query parameters, used for custom filtering and getManyReference
-     * @return ResponseEntity containing a list of entities matching the criteria
+     * @param _embed    optional parameter to embed related resources (implementation-specific)
+     * @param allParams map containing all query parameters, including custom filters
+     * @return ResponseEntity containing a list of entities for the requested page with X-Total-Count header
      */
     @GetMapping
     ResponseEntity<List<T>> getList(
-            @RequestParam(required = false, defaultValue = "-1") int _start,
-            @RequestParam(required = false, defaultValue = "-1") int _end,
+            @RequestParam int _start,
+            @RequestParam int _end,
             @RequestParam(required = false, defaultValue = "id") String _sort,
             @RequestParam(required = false, defaultValue = "ASC") String _order,
             @RequestParam(required = false) String _embed,
-            @RequestParam(required = false) List<ID> id,
+            @RequestParam Map<String, String> allParams
+    );
+
+    /**
+     * Retrieves multiple specific entities by their unique identifiers.
+     * This endpoint implements ra-data-json-server's <b>getMany</b> operation.
+     *
+     * <p>Unlike getList, this operation does not use pagination. It simply returns all entities
+     * with the specified IDs. This is commonly used when the client needs to fetch multiple
+     * specific records, such as when displaying relationships or selected items.</p>
+     *
+     * <p><b>Example request:</b></p>
+     * <pre>GET /api/posts/many?id=1&id=5&id=12</pre>
+     *
+     * <p>The response contains only the entities whose IDs were provided in the request.
+     * If an ID doesn't exist, it is typically omitted from the response (rather than returning an error).
+     * The order of returned entities may not match the order of requested IDs.</p>
+     *
+     * <p><b>Note:</b> This endpoint does not return pagination headers since all requested
+     * entities are returned in a single response.</p>
+     *
+     * @param id list of entity identifiers to retrieve
+     * @return ResponseEntity containing a list of entities with the specified IDs
+     */
+    @GetMapping("/many")
+    ResponseEntity<List<T>> getMany(@RequestParam List<ID> id);
+
+    /**
+     * Retrieves a paginated list of entities that reference another specific entity.
+     * This endpoint implements ra-data-json-server's <b>getManyReference</b> operation.
+     *
+     * <p>This operation is used to fetch entities related to a specific record. For example,
+     * retrieving all comments for a particular post, or all orders for a specific customer.
+     * Unlike getList, the filter is based on a reference relationship rather than arbitrary criteria.</p>
+     *
+     * <p><b>Example request:</b></p>
+     * <pre>GET /api/comments/of/postId/123?_start=0&_end=10&_sort=createdAt&_order=DESC</pre>
+     *
+     * <p>This would retrieve comments where the postId field equals 123, paginated and sorted.</p>
+     *
+     * <p>The response must include an <code>X-Total-Count</code> header containing the total number
+     * of entities that reference the specified target entity. This is essential for pagination
+     * in the React Admin interface.</p>
+     *
+     * <p><b>Response headers:</b></p>
+     * <ul>
+     *   <li><code>X-Total-Count</code>: Total number of entities referencing the target entity</li>
+     *   <li><code>Access-Control-Expose-Headers</code>: Must include "X-Total-Count"</li>
+     * </ul>
+     *
+     * @param target    the name of the field that references the target entity (e.g., "postId", "userId")
+     * @param targetId  the ID of the target entity being referenced (e.g., "123")
+     * @param _start    the starting index for pagination (0-based, inclusive)
+     * @param _end      the ending index for pagination (0-based, exclusive)
+     * @param _sort     the field name to sort by (default: "id")
+     * @param _order    the sort direction, either "ASC" or "DESC" (default: "ASC")
+     * @param _embed    optional parameter to embed related resources (implementation-specific)
+     * @param allParams map containing all query parameters, which may include additional filters
+     * @return ResponseEntity containing a paginated list of entities that reference the target entity,
+     *         with X-Total-Count header
+     */
+    @GetMapping("/of/{target}/{targetId}")
+    ResponseEntity<List<T>> getManyReference(
+            @PathVariable String target,
+            @PathVariable String targetId,
+            @RequestParam int _start,
+            @RequestParam int _end,
+            @RequestParam(required = false, defaultValue = "id") String _sort,
+            @RequestParam(required = false, defaultValue = "ASC") String _order,
+            @RequestParam(required = false) String _embed,
             @RequestParam Map<String, String> allParams
     );
 

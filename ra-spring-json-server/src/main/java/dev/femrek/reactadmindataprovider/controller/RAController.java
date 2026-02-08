@@ -32,7 +32,7 @@ public abstract class RAController<T, C, ID> implements IRAController<T, C, ID> 
     protected abstract IRAService<T, C, ID> getService();
 
     private static final List<String> RESERVED_PARAMS = List.of(
-            "_start", "_end", "_sort", "_order", "_embed", "id"
+            "_start", "_end", "_sort", "_order", "_embed"
     );
 
     @Override
@@ -42,15 +42,9 @@ public abstract class RAController<T, C, ID> implements IRAController<T, C, ID> 
             String _sort,
             String _order,
             String _embed,
-            List<ID> id,
             Map<String, String> allParams
     ) {
-        // 1. Handle "getMany" (Fetch by specific IDs)
-        if (id != null && !id.isEmpty()) {
-            return ResponseEntity.ok(getService().findAllById(id));
-        }
-
-        // 2. Validate Pagination Parameters if "getList"
+        // Validate Pagination Parameters if "getList"
         if (_start < 0 || _end < 0) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "_start and _end parameters are null or smaller than 0. These parameters are required for `getList` operation.");
@@ -59,22 +53,74 @@ public abstract class RAController<T, C, ID> implements IRAController<T, C, ID> 
                     "_end parameter must be greater than _start parameter.");
         }
 
-        // 3. Calculate Pagination
+        // Calculate Pagination
         int pageSize = _end - _start;
         int pageNumber = _start / pageSize;
         Sort sort = Sort.by(Sort.Direction.fromString(_order), _sort);
         Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
 
-        // 4. Handle _embed Parameter
+        // Handle _embed Parameter
         if (_embed != null) {
             log.warn("_embed parameter is not supported and will be ignored.");
         }
 
-        // 5. Fetch Data
+        // Refine params and fetch Data
         RESERVED_PARAMS.forEach(allParams.keySet()::remove);
         Page<T> pageResult = getService().findWithFilters(allParams, pageable);
 
-        // 6. Set Headers
+        // Set Headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("X-Total-Count", String.valueOf(pageResult.getTotalElements()));
+        headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "X-Total-Count");
+
+        return new ResponseEntity<>(pageResult.getContent(), headers, HttpStatus.OK);
+    }
+
+    @Override
+    public ResponseEntity<List<T>> getMany(List<ID> id) {
+        if (id == null || id.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "id parameter is null or empty. This parameter is required for `getMany` operation.");
+        }
+        return ResponseEntity.ok(getService().findAllById(id));
+    }
+
+    @Override
+    public ResponseEntity<List<T>> getManyReference(
+            String target,
+            String targetId,
+            int _start,
+            int _end,
+            String _sort,
+            String _order,
+            String _embed,
+            Map<String, String> allParams
+    ) {
+        // Validate Pagination Parameters if "getManyReference"
+        if (_start < 0 || _end < 0) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "_start and _end parameters are null or smaller than 0. These parameters are required for `getManyReference` operation.");
+        } else if (_end <= _start) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "_end parameter must be greater than _start parameter.");
+        }
+
+        // Calculate Pagination
+        int pageSize = _end - _start;
+        int pageNumber = _start / pageSize;
+        Sort sort = Sort.by(Sort.Direction.fromString(_order), _sort);
+        Pageable pageable = PageRequest.of(pageNumber, pageSize, sort);
+
+        // Handle _embed Parameter
+        if (_embed != null) {
+            log.warn("_embed parameter is not supported and will be ignored.");
+        }
+
+        // Refine params and fetch Data
+        RESERVED_PARAMS.forEach(allParams.keySet()::remove);
+        Page<T> pageResult = getService().findWithTargetAndFilters(target, targetId, allParams, pageable);
+
+        // Set Headers
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", String.valueOf(pageResult.getTotalElements()));
         headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "X-Total-Count");

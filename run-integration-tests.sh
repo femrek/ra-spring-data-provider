@@ -3,6 +3,9 @@
 # Exit on error
 set -e
 
+# Parse command line arguments
+TEST_SUITE="${1:-all}"
+
 echo "🚀 Starting Integration Tests..."
 
 # Colors for output
@@ -10,6 +13,27 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
+
+# Display usage information
+if [ "$TEST_SUITE" = "--help" ] || [ "$TEST_SUITE" = "-h" ]; then
+    echo "Usage: ./run-integration-tests.sh [TEST_SUITE]"
+    echo ""
+    echo "TEST_SUITE options:"
+    echo "  all              Run all tests (default)"
+    echo "  data-provider    Run data provider tests only"
+    echo "  users            Run user management tests only"
+    echo "  posts            Run posts reference tests only"
+    echo "  smoke            Run smoke tests only"
+    echo "  errors           Run error handling tests only"
+    echo "  performance      Run performance tests only"
+    echo "  ui-ux            Run UI/UX tests only"
+    echo ""
+    echo "Examples:"
+    echo "  ./run-integration-tests.sh"
+    echo "  ./run-integration-tests.sh data-provider"
+    echo "  ./run-integration-tests.sh posts"
+    exit 0
+fi
 
 # Function to cleanup on exit
 cleanup() {
@@ -65,7 +89,47 @@ done
 # Step 4: Run Playwright tests
 echo -e "${YELLOW}🎭 Running Playwright tests...${NC}"
 cd ../ra-spring-data-provider
-npm run test
+
+# Determine which test to run based on the parameter
+case "$TEST_SUITE" in
+    all)
+        echo "Running all tests..."
+        npm run test
+        ;;
+    data-provider)
+        echo "Running data provider tests..."
+        npm run test:data-provider
+        ;;
+    users)
+        echo "Running user management tests..."
+        npm run test:users
+        ;;
+    posts)
+        echo "Running posts reference tests..."
+        npm run test:posts
+        ;;
+    smoke)
+        echo "Running smoke tests..."
+        npm run test:smoke
+        ;;
+    errors|error-handling)
+        echo "Running error handling tests..."
+        npm run test:error-handling
+        ;;
+    performance)
+        echo "Running performance tests..."
+        npm run test:performance
+        ;;
+    ui-ux)
+        echo "Running UI/UX tests..."
+        npm run test:ui-ux
+        ;;
+    *)
+        echo -e "${RED}Unknown test suite: $TEST_SUITE${NC}"
+        echo "Use --help to see available options"
+        exit 1
+        ;;
+esac
 
 # Step 5: Check test results
 if [ $? -eq 0 ]; then

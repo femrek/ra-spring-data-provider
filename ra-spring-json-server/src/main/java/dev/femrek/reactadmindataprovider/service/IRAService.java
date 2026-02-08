@@ -26,6 +26,20 @@ public interface IRAService<T, C, ID> {
     Page<T> findWithFilters(Map<String, String> filters, Pageable pageable);
 
     /**
+     * Finds entities that reference another entity, based on a target field and ID, along with additional filters.
+     *
+     * @param target   The name of the field that references the target entity (e.g., "userId").
+     * @param targetId The ID of the target entity to match (e.g., 123).
+     * @param filters  Additional filters to apply (e.g., "status" -> "active").
+     * @param pageable Pagination and sorting information.
+     * @return A page of entities referencing the target entity and matching the filters.
+     */
+    Page<T> findWithTargetAndFilters(String target,
+                                     String targetId,
+                                     Map<String, String> filters,
+                                     Pageable pageable);
+
+    /**
      * Retrieves all entities by their IDs.
      *
      * @param ids The collection of entity IDs to retrieve.

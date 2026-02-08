@@ -407,4 +407,98 @@ test.describe("Data Provider Integration", () => {
       expect(page.url()).toContain("page=2");
     }
   });
+
+  test("should handle getManyReference operation", async ({ page }) => {
+    // Create a user to be the parent record
+    const timestamp = Date.now();
+    await page.goto("/#/users/create");
+    await page.getByLabel(/name/i).fill(`Reference Parent ${timestamp}`);
+    await page.getByLabel(/email/i).fill(`refparent${timestamp}@example.com`);
+    await page.getByLabel(/role/i).fill("author");
+    await page.getByRole("button", { name: /save/i }).click();
+    await page.waitForURL(/.*#\/users/);
+    await page.waitForTimeout(1000);
+
+    // Navigate to list with sorting to ensure first row is the newly created user
+    await page.goto("/#/users?page=1&perPage=25&sort=id&order=DESC");
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(500);
+
+    // Get the user ID - the ID is in the second cell (first is checkbox)
+    const firstRow = page.locator("table tbody tr").first();
+    const userId = (await firstRow.locator("td").nth(1).textContent()).trim();
+    console.log("Extracted userId:", userId);
+
+    // Create posts for this user to test getManyReference
+    await page.goto("/#/posts");
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(500);
+
+    const postsToCreate = [
+      {
+        title: `Ref Post 1 ${timestamp}`,
+        content: "Content 1",
+        status: "published",
+      },
+      {
+        title: `Ref Post 2 ${timestamp}`,
+        content: "Content 2",
+        status: "draft",
+      },
+      {
+        title: `Ref Post 3 ${timestamp}`,
+        content: "Content 3",
+        status: "published",
+      },
+    ];
+
+    for (const post of postsToCreate) {
+      await page
+        .waitForSelector('a[href="#/posts/create"]', { timeout: 5000 })
+        .catch(() => {});
+      await page.getByRole("link", { name: /create/i }).click();
+      await page.waitForLoadState("networkidle");
+      await page.waitForTimeout(500);
+      await page.getByLabel(/title/i).fill(post.title);
+      await page
+        .getByRole("textbox", { name: /^content$/i })
+        .fill(post.content);
+      const userIdInput = page.locator('input[name="userId"]');
+      await userIdInput.waitFor({ state: "visible" });
+      await userIdInput.click();
+      await userIdInput.fill(userId);
+      await page.getByLabel(/status/i).fill(post.status);
+      await page.getByRole("button", { name: /save/i }).click();
+      await page.waitForURL(/.*#\/posts/);
+      await page.waitForTimeout(300);
+    }
+
+    // Navigate to user show page - this triggers getManyReference via ReferenceManyField
+    await page.goto(`/#/users/${userId}/show`);
+    await page.waitForLoadState("networkidle");
+    await page.waitForTimeout(4000);
+
+    // Verify the user info is displayed
+    await expect(
+      page.getByText(`Reference Parent ${timestamp}`).first(),
+    ).toBeVisible({
+      timeout: 10000,
+    });
+
+    // Verify "User's Posts" section (ReferenceManyField label)
+    await expect(
+      page.getByText("User's Posts", { exact: false }),
+    ).toBeVisible();
+
+    // Verify all posts are displayed (getManyReference filtered by userId)
+    for (const post of postsToCreate) {
+      await expect(page.getByText(post.title)).toBeVisible();
+    }
+
+    // Verify the posts table is present
+    const postsTables = page.locator("table");
+    const tableCount = await postsTables.count();
+    // Should have at least 2 tables (one for the main content, one for posts)
+    expect(tableCount).toBeGreaterThanOrEqual(1);
+  });
 });

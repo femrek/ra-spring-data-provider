@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Admin, Resource, List, Datagrid, TextField, EmailField, Create, SimpleForm, TextInput, Edit, EditButton, DeleteButton, useListContext, useUpdateMany, useRefresh, useNotify, useUnselectAll } from 'react-admin';
+import { Admin, Resource, List, Datagrid, TextField, EmailField, Create, SimpleForm, TextInput, Edit, EditButton, DeleteButton, useListContext, useUpdateMany, useRefresh, useNotify, useUnselectAll, Show, SimpleShowLayout, ReferenceField, ReferenceManyField, ShowButton, NumberInput } from 'react-admin';
 import { Dialog, DialogTitle, DialogContent, DialogActions, TextField as MuiTextField, Button as MuiButton } from '@mui/material';
 import raSpringDataProvider from '../src/index.ts';
 
@@ -101,6 +101,7 @@ const UserList = () => (
       <TextField source="name" />
       <EmailField source="email" />
       <TextField source="role" />
+      <ShowButton />
       <EditButton />
       <DeleteButton />
     </Datagrid>
@@ -129,6 +130,71 @@ const UserEdit = () => (
   </Edit>
 );
 
+// Users Show Component with Posts (getManyReference test)
+const UserShow = () => (
+  <Show>
+    <SimpleShowLayout>
+      <TextField source="id" />
+      <TextField source="name" />
+      <EmailField source="email" />
+      <TextField source="role" />
+      <ReferenceManyField
+        reference="posts"
+        target="userId"
+        label="User's Posts"
+      >
+        <Datagrid>
+          <TextField source="id" />
+          <TextField source="title" />
+          <TextField source="content" />
+          <TextField source="status" />
+        </Datagrid>
+      </ReferenceManyField>
+    </SimpleShowLayout>
+  </Show>
+);
+
+// Posts List Component
+const PostList = () => (
+  <List>
+    <Datagrid>
+      <TextField source="id" />
+      <TextField source="title" />
+      <TextField source="content" />
+      <ReferenceField source="userId" reference="users" label="Author">
+        <TextField source="name" />
+      </ReferenceField>
+      <TextField source="status" />
+      <EditButton />
+      <DeleteButton />
+    </Datagrid>
+  </List>
+);
+
+// Posts Create Component
+const PostCreate = () => (
+  <Create redirect="list">
+    <SimpleForm>
+      <TextInput source="title" required />
+      <TextInput source="content" multiline rows={4} required />
+      <NumberInput source="userId" required />
+      <TextInput source="status" />
+    </SimpleForm>
+  </Create>
+);
+
+// Posts Edit Component
+const PostEdit = () => (
+  <Edit redirect="list">
+    <SimpleForm>
+      <TextInput source="title" required />
+      <TextInput source="content" multiline rows={4} required />
+      <NumberInput source="userId" required />
+      <TextInput source="status" />
+    </SimpleForm>
+  </Edit>
+);
+
 const App = () => (
   <Admin dataProvider={dataProvider}>
     <Resource 
@@ -136,6 +202,13 @@ const App = () => (
       list={UserList} 
       create={UserCreate} 
       edit={UserEdit}
+      show={UserShow}
+    />
+    <Resource 
+      name="posts" 
+      list={PostList} 
+      create={PostCreate} 
+      edit={PostEdit}
     />
   </Admin>
 );

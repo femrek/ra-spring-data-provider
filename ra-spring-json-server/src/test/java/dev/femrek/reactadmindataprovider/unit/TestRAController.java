@@ -23,13 +23,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(classes = TestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @TestPropertySource(locations = "classpath:application-test.properties")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class RAControllerTest {
+class TestRAController {
     @LocalServerPort
     private int port;
     private final UserRepository userRepository;
 
     @Autowired
-    public RAControllerTest(UserRepository userRepository) {
+    public TestRAController(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
@@ -243,9 +243,10 @@ class RAControllerTest {
 
     @Test
     @Order(7)
-    @DisplayName("GET /api/users?id=1&id=2&id=3 - Get multiple users by IDs")
+    @DisplayName("GET /api/users/many?id=1&id=2&id=3 - Get multiple users by IDs")
     void testGetMany() throws IOException {
         HttpUrl url = baseHttpUrl().newBuilder()
+                .addPathSegment("many")
                 .addQueryParameter("id", createdUserId1.toString())
                 .addQueryParameter("id", createdUserId2.toString())
                 .addQueryParameter("id", createdUserId3.toString())
@@ -671,7 +672,7 @@ class RAControllerTest {
 
     @Test
     @Order(20)
-    @DisplayName("GET /api/users - Test pagination with offset")
+    @DisplayName("GET /api/users?_start=1&_end=3&_sort=id&_order=ASC - Test pagination with offset")
     void testGetListWithOffset() throws IOException {
         HttpUrl url = baseHttpUrl().newBuilder()
                 .addQueryParameter("_start", "1")

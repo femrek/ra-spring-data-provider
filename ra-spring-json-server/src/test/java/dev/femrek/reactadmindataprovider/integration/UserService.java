@@ -66,6 +66,17 @@ class UserService implements IRAService<UserResponseDTO, UserCreateDTO, Long> {
     }
 
     @Override
+    public Page<UserResponseDTO> findWithTargetAndFilters(
+            String target,
+            String targetId,
+            Map<String, String> filters,
+            Pageable pageable
+    ) {
+        filters.put(target, targetId);
+        return findWithFilters(filters, pageable);
+    }
+
+    @Override
     public List<UserResponseDTO> findAllById(Iterable<Long> ids) {
         List<User> entities = userRepository.findAllById(ids);
         List<UserResponseDTO> results = new ArrayList<>();

@@ -36,8 +36,8 @@ import { fetchUtils, DataProvider } from "ra-core";
  * **Supported Operations:**
  * - `getList`: GET /resource?_start=0&_end=10&_sort=id&_order=ASC
  * - `getOne`: GET /resource/123
- * - `getMany`: GET /resource?id=123&id=456&id=789
- * - `getManyReference`: GET /resource?author_id=12&_start=0&_end=10
+ * - `getMany`: GET /resource/many?id=123&id=456&id=789
+ * - `getManyReference`: GET /resource/of/{target}/{id}?_start=0&_end=10
  * - `create`: POST /resource with JSON body
  * - `update`: PUT /resource/123 with JSON body
  * - `updateMany`: PUT /resource?id=123&id=456 with JSON body (bulk update)
@@ -104,7 +104,7 @@ export default (
       id: params.ids,
       _embed: params?.meta?.embed,
     };
-    const url = `${apiUrl}/${resource}?${queryString.stringify(query)}`;
+    const url = `${apiUrl}/${resource}/many?${queryString.stringify(query)}`;
     const { json } = await httpClient(url, { signal: params?.signal });
     return { data: json };
   },
@@ -114,14 +114,13 @@ export default (
     const { field, order } = params.sort;
     const query = {
       ...fetchUtils.flattenObject(params.filter),
-      [params.target]: params.id,
       _sort: field,
       _order: order,
       _start: (page - 1) * perPage,
       _end: page * perPage,
       _embed: params?.meta?.embed,
     };
-    const url = `${apiUrl}/${resource}?${queryString.stringify(query)}`;
+    const url = `${apiUrl}/${resource}/of/${params.target}/${params.id}?${queryString.stringify(query)}`;
 
     const { headers, json } = await httpClient(url, {
       signal: params?.signal,
