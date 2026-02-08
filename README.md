@@ -56,14 +56,14 @@ Add the dependency to your `pom.xml` if you use Maven:
 <dependency>
     <groupId>dev.femrek</groupId>
     <artifactId>ra-spring-json-server</artifactId>
-    <version>1.2.1</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
 Add the dependency to your `build.gradle` if you use Gradle:
 
 ```gradle
-implementation 'dev.femrek:ra-spring-json-server:1.2.1'
+implementation 'dev.femrek:ra-spring-json-server:2.0.0'
 ```
 
 ### Frontend
