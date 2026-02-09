@@ -5,11 +5,19 @@ import dev.femrek.openapidemo.dto.UserResponseDTO;
 import dev.femrek.openapidemo.service.UserService;
 import dev.femrek.reactadmindataprovider.controller.RAController;
 import dev.femrek.reactadmindataprovider.service.IRAService;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users/openapi")
@@ -22,5 +30,21 @@ public class UserController extends RAController<UserResponseDTO, UserCreateDTO,
     @Override
     protected IRAService<UserResponseDTO, UserCreateDTO, Long> getService() {
         return userService;
+    }
+
+    @Override
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successfully deleted the specified User entities."
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "One or more User entities not found for the provided IDs.",
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))
+            )
+    })
+    public ResponseEntity<List<Long>> deleteMany(List<Long> id) {
+        return super.deleteMany(id);
     }
 }

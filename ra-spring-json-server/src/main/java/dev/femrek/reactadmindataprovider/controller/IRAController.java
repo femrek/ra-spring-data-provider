@@ -2,10 +2,8 @@ package dev.femrek.reactadmindataprovider.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,7 +53,7 @@ public interface IRAController<T, C, ID> {
      * @return ResponseEntity containing a list of entities for the requested page with X-Total-Count header
      */
     @Operation(
-            summary = "Get paginated list of entities with filtering",
+            summary = "GetList: Get paginated list of entities with filtering",
             description = """
                     Retrieves a paginated list of entities with support for sorting and filtering.
                     Implements ra-spring-data-provider's getList operation.
@@ -72,22 +70,7 @@ public interface IRAController<T, C, ID> {
                     """,
             operationId = "getList"
     )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = """
-                            Successfully retrieved list of entities.
-                            Response includes X-Total-Count header containing the total number of entities matching the filter criteria.
-                            """,
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid request parameters (e.g., missing required pagination parameters, _start < 0, _end <= _start)",
-                    content = @Content
-            )
-    })
-    @GetMapping
+    @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<List<T>> getList(
             @Parameter(description = "Starting index for pagination (0-based, inclusive)", required = true, example = "0")
             @RequestParam(name = "_start") int _start,
@@ -125,7 +108,7 @@ public interface IRAController<T, C, ID> {
      * @return ResponseEntity containing a list of entities with the specified IDs
      */
     @Operation(
-            summary = "Get multiple entities by IDs",
+            summary = "GetMany: Get multiple entities by IDs",
             description = """
                     Retrieves multiple specific entities by their unique identifiers.
                     Implements ra-spring-data-provider's getMany operation.
@@ -141,22 +124,7 @@ public interface IRAController<T, C, ID> {
                     """,
             operationId = "getMany"
     )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = """
-                            Successfully retrieved entities with the specified IDs.
-                            Non-existent IDs are omitted from the response.
-                            """,
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid request parameters",
-                    content = @Content
-            )
-    })
-    @GetMapping("/many")
+    @GetMapping(value = "/many", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<List<T>> getMany(
             @Parameter(description = "List of entity IDs to retrieve", required = true, example = "[1, 5, 12]")
             @RequestParam(name = "id") List<ID> id
@@ -197,7 +165,7 @@ public interface IRAController<T, C, ID> {
      * with X-Total-Count header
      */
     @Operation(
-            summary = "Get entities that reference another entity",
+            summary = "GetManyReference: Get entities that reference another entity",
             description = """
                     Retrieves a paginated list of entities that reference another specific entity.
                     Implements ra-spring-data-provider's getManyReference operation.
@@ -214,22 +182,7 @@ public interface IRAController<T, C, ID> {
                     """,
             operationId = "getManyReference"
     )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = """
-                            Successfully retrieved entities that reference the target entity.
-                            Response includes X-Total-Count header containing the total number of referencing entities.
-                            """,
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid request parameters (e.g., missing required pagination parameters, _start < 0, _end <= _start)",
-                    content = @Content
-            )
-    })
-    @GetMapping("/of/{target}/{targetId}")
+    @GetMapping(value = "/of/{target}/{targetId}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<List<T>> getManyReference(
             @Parameter(description = "Name of the field that references the target entity", required = true, example = "userId")
             @PathVariable(name = "target") String target,
@@ -257,25 +210,13 @@ public interface IRAController<T, C, ID> {
      * @return ResponseEntity containing the requested entity
      */
     @Operation(
-            summary = "Get single entity by ID",
+            summary = "GetOne: Get single entity by ID",
             description = """
                     Retrieves a single entity by its unique identifier.
                     Implements ra-spring-data-provider's getOne operation.
                     """
     )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Successfully retrieved the entity",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Entity not found",
-                    content = @Content
-            )
-    })
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<T> getOne(
             @Parameter(description = "Unique identifier of the entity to retrieve", required = true, example = "1")
             @PathVariable(name = "id") ID id
@@ -290,26 +231,14 @@ public interface IRAController<T, C, ID> {
      * typically with HTTP status 201 Created
      */
     @Operation(
-            summary = "Create a new entity",
+            summary = "Create: Create a new entity",
             description = """
                     Creates a new entity with the provided data.
                     Implements ra-spring-data-provider's create operation.
                     Returns the created entity with generated ID and server-side defaults.
                     """
     )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "201",
-                    description = "Entity successfully created",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid request body or validation error",
-                    content = @Content
-            )
-    })
-    @PostMapping
+    @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<T> create(
             @Parameter(description = "Entity data to create", required = true)
             @RequestBody C data
@@ -324,31 +253,14 @@ public interface IRAController<T, C, ID> {
      * @return ResponseEntity containing the updated entity
      */
     @Operation(
-            summary = "Update an existing entity",
+            summary = "Update: Update an existing entity",
             description = """
                     Updates an existing entity with the provided field values.
                     Implements ra-spring-data-provider's update operation with support for partial updates.
                     Only the fields provided in the request body will be updated.
                     """
     )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Entity successfully updated",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Entity not found",
-                    content = @Content
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid request body or validation error",
-                    content = @Content
-            )
-    })
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<T> update(
             @Parameter(description = "Unique identifier of the entity to update", required = true, example = "1")
             @PathVariable(name = "id") ID id,
@@ -364,26 +276,13 @@ public interface IRAController<T, C, ID> {
      * @return ResponseEntity with no content (204 No Content)
      */
     @Operation(
-            summary = "Delete a single entity",
+            summary = "Delete: Delete a single entity",
             description = """
                     Deletes a single entity by its unique identifier.
                     Implements ra-spring-data-provider's delete operation.
-                    Returns 204 No Content on successful deletion.
                     """
     )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "Entity successfully deleted",
-                    content = @Content
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Entity not found",
-                    content = @Content
-            )
-    })
-    @DeleteMapping("/{id}")
+    @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Void> delete(
             @Parameter(description = "Unique identifier of the entity to delete", required = true, example = "1")
             @PathVariable(name = "id") ID id
@@ -402,26 +301,14 @@ public interface IRAController<T, C, ID> {
      * @return ResponseEntity containing a list of updated entity IDs
      */
     @Operation(
-            summary = "Update multiple entities",
+            summary = "UpdateMany: Update multiple entities",
             description = """
                     Updates multiple entities with the same field values in a single operation.
                     Implements ra-spring-data-provider's updateMany operation for bulk updates.
                     Returns a list of updated entity IDs.
                     """
     )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Entities successfully updated",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid request body or validation error",
-                    content = @Content
-            )
-    })
-    @PutMapping
+    @PutMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<List<ID>> updateMany(
             @Parameter(description = "List of entity IDs to update", example = "[1, 2, 3]")
             @RequestParam(name = "id", required = false) List<ID> id,
@@ -437,26 +324,14 @@ public interface IRAController<T, C, ID> {
      * @return ResponseEntity containing a list of deleted entity IDs
      */
     @Operation(
-            summary = "Delete multiple entities",
+            summary = "DeleteMany: Delete multiple entities",
             description = """
                     Deletes multiple entities in a single operation.
                     Implements ra-spring-data-provider's deleteMany operation for bulk deletions.
                     Returns a list of deleted entity IDs.
                     """
     )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Entities successfully deleted",
-                    content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Invalid request parameters",
-                    content = @Content
-            )
-    })
-    @DeleteMapping
+    @DeleteMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<List<ID>> deleteMany(
             @Parameter(description = "List of entity IDs to delete", example = "[1, 2, 3]")
             @RequestParam(name = "id", required = false) List<ID> id
