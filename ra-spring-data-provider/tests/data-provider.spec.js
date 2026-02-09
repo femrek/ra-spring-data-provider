@@ -427,7 +427,6 @@ test.describe("Data Provider Integration", () => {
     // Get the user ID - the ID is in the second cell (first is checkbox)
     const firstRow = page.locator("table tbody tr").first();
     const userId = (await firstRow.locator("td").nth(1).textContent()).trim();
-    console.log("Extracted userId:", userId);
 
     // Create posts for this user to test getManyReference
     await page.goto("/#/posts");
