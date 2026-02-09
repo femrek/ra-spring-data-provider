@@ -39,6 +39,7 @@ This library bridges the gap between Spring Boot applications and React Admin fr
 - ✅ **Advanced Filtering**: Field-specific filters and global search queries
 - ✅ **Type-Safe**: Generics support with separate DTOs for requests and responses
 - ✅ **Flexible Data Mapping**: Use DTOs to control exactly what data is exposed in your API
+- ✅ **OpenAPI Integration**: Automatically generated API documentation via OpenAPI annotations. Fully customizable — extend or add annotations in your controllers to enrich the generated documentation.
 
 ## Requirements
 
@@ -56,14 +57,14 @@ Add the dependency to your `pom.xml` if you use Maven:
 <dependency>
     <groupId>dev.femrek</groupId>
     <artifactId>ra-spring-json-server</artifactId>
-    <version>2.0.0</version>
+    <version>2.0.1</version>
 </dependency>
 ```
 
 Add the dependency to your `build.gradle` if you use Gradle:
 
 ```gradle
-implementation 'dev.femrek:ra-spring-json-server:2.0.0'
+implementation 'dev.femrek:ra-spring-json-server:2.0.1'
 ```
 
 ### Frontend
