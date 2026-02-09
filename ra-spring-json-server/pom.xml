@@ -11,7 +11,7 @@
 
     <groupId>dev.femrek</groupId>
     <artifactId>ra-spring-json-server</artifactId>
-    <version>2.0.1</version>
+    <version>2.0.2</version>
     <packaging>jar</packaging>
     <name>react-admin-data-provider</name>
     <description>Java library that provides a Spring Controller Interface for React Admin clients.</description>
@@ -57,18 +57,6 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-<!--        &lt;!&ndash; Source: https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations-jakarta &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>io.swagger.core.v3</groupId>-->
-<!--            <artifactId>swagger-annotations-jakarta</artifactId>-->
-<!--            <version>2.2.42</version>-->
-<!--        </dependency>-->
-<!--        &lt;!&ndash; Source: https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-core &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>io.swagger.core.v3</groupId>-->
-<!--            <artifactId>swagger-core</artifactId>-->
-<!--            <version>2.2.42</version>-->
-<!--        </dependency>-->
         <!-- Source: https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-starter-common -->
         <dependency>
             <groupId>org.springdoc</groupId>
