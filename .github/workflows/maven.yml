@@ -61,7 +61,9 @@ jobs:
           server-password: MAVEN_PASSWORD
 
       - name: Import GPG key
-        run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: echo "$GPG_PRIVATE_KEY" | gpg --batch --import
 
       - name: Publish to Maven Central
         working-directory: ra-spring-json-server
