@@ -45,7 +45,7 @@ public interface IRAService<T, C, ID> {
      * @param ids The collection of entity IDs to retrieve.
      * @return A list of entities matching the given IDs.
      */
-    List<T> findAllById(Iterable<ID> ids);
+    List<T> findAllById(List<ID> ids);
 
     /**
      * Retrieves a single entity by its ID.
@@ -79,7 +79,7 @@ public interface IRAService<T, C, ID> {
      * @param fields A map of field names to their new values to apply to all entities.
      * @return A list of IDs of the updated entities.
      */
-    List<ID> updateMany(Iterable<ID> ids, Map<String, Object> fields);
+    List<ID> updateMany(List<ID> ids, Map<String, Object> fields);
 
     /**
      * Deletes an entity by its ID.
@@ -94,5 +94,5 @@ public interface IRAService<T, C, ID> {
      * @param ids The collection of entity IDs to delete.
      * @return A list of IDs of the deleted entities.
      */
-    List<ID> deleteMany(Iterable<ID> ids);
+    List<ID> deleteMany(List<ID> ids);
 }

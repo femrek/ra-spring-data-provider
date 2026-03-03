@@ -69,7 +69,7 @@ class PostService implements IRAService<PostResponseDTO, PostCreateDTO, Long> {
     }
 
     @Override
-    public List<PostResponseDTO> findAllById(Iterable<Long> ids) {
+    public List<PostResponseDTO> findAllById(List<Long> ids) {
         return postRepository.findAllById(ids).stream()
                 .map(this::toResponseDTO)
                 .toList();
@@ -113,15 +113,12 @@ class PostService implements IRAService<PostResponseDTO, PostCreateDTO, Long> {
     }
 
     @Override
-    public List<Long> updateMany(Iterable<Long> ids, Map<String, Object> fields) {
-        List<Long> idList = new ArrayList<>();
-        ids.forEach(idList::add);
-
-        if (idList.isEmpty()) {
+    public List<Long> updateMany(List<Long> ids, Map<String, Object> fields) {
+        if (ids.isEmpty()) {
             return new ArrayList<>();
         }
 
-        List<Post> posts = postRepository.findAllById(idList);
+        List<Post> posts = postRepository.findAllById(ids);
         posts.forEach(post ->
             fields.forEach((field, value) -> {
                 switch (field) {
@@ -134,7 +131,7 @@ class PostService implements IRAService<PostResponseDTO, PostCreateDTO, Long> {
         );
 
         postRepository.saveAll(posts);
-        return idList;
+        return ids;
     }
 
     @Override
@@ -146,15 +143,12 @@ class PostService implements IRAService<PostResponseDTO, PostCreateDTO, Long> {
     }
 
     @Override
-    public List<Long> deleteMany(Iterable<Long> ids) {
-        List<Long> idList = new ArrayList<>();
-        ids.forEach(idList::add);
-
-        if (idList.isEmpty()) {
+    public List<Long> deleteMany(List<Long> ids) {
+        if (ids.isEmpty()) {
             return new ArrayList<>();
         }
 
-        List<Post> posts = postRepository.findAllById(idList);
+        List<Post> posts = postRepository.findAllById(ids);
         postRepository.deleteAll(posts);
         return posts.stream().map(Post::getId).toList();
     }
