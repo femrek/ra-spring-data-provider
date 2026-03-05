@@ -57,7 +57,7 @@ public class UserService implements IRAService<UserResponseDTO, UserCreateDTO, L
     }
 
     @Override
-    public List<UserResponseDTO> findAllById(Iterable<Long> ids) {
+    public List<UserResponseDTO> findAllById(List<Long> ids) {
         List<User> users = userRepository.findAllById(ids);
         return users.stream()
                 .map(this::convertToResponseDTO)
@@ -103,7 +103,7 @@ public class UserService implements IRAService<UserResponseDTO, UserCreateDTO, L
 
     @Override
     @Transactional
-    public List<Long> updateMany(Iterable<Long> ids, Map<String, Object> fields) {
+    public List<Long> updateMany(List<Long> ids, Map<String, Object> fields) {
         List<Long> updatedIds = new ArrayList<>();
 
         for (Long id : ids) {
@@ -129,7 +129,7 @@ public class UserService implements IRAService<UserResponseDTO, UserCreateDTO, L
 
     @Override
     @Transactional
-    public List<Long> deleteMany(Iterable<Long> ids) {
+    public List<Long> deleteMany(List<Long> ids) {
         List<Long> deletedIds = new ArrayList<>();
 
         for (Long id : ids) {

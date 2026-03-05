@@ -20,7 +20,7 @@ import java.util.Map;
  * @param <C>  the Create DTO type for this resource
  * @param <ID> the type of the entity's identifier
  */
-@Tag(name = "RA Controller", description = "Generic REST controller for ra-spring-data-provider compatibility" +
+@Tag(name = "Objects", description = "Generic REST controller for ra-spring-data-provider compatibility" +
         "Add @Tag annotation to your controller implementation to provide API documentation details specific to your resource.")
 public interface IRAController<T, C, ID> {
     /**
@@ -68,7 +68,7 @@ public interface IRAController<T, C, ID> {
                     
                     Example: GET /api/posts?_start=0&_end=10&_sort=title&_order=ASC&status=published
                     """,
-            operationId = "getList"
+            operationId = "list"
     )
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<List<T>> getList(
@@ -180,7 +180,7 @@ public interface IRAController<T, C, ID> {
                     Example: GET /api/comments/of/postId/123?_start=0&_end=10&_sort=createdAt&_order=DESC
                     This retrieves comments where the postId field equals 123, paginated and sorted.
                     """,
-            operationId = "getManyReference"
+            operationId = "getManyReferenceBy"
     )
     @GetMapping(value = "/of/{target}/{targetId}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<List<T>> getManyReference(
@@ -214,7 +214,8 @@ public interface IRAController<T, C, ID> {
             description = """
                     Retrieves a single entity by its unique identifier.
                     Implements ra-spring-data-provider's getOne operation.
-                    """
+                    """,
+            operationId = "get"
     )
     @GetMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<T> getOne(
@@ -236,7 +237,8 @@ public interface IRAController<T, C, ID> {
                     Creates a new entity with the provided data.
                     Implements ra-spring-data-provider's create operation.
                     Returns the created entity with generated ID and server-side defaults.
-                    """
+                    """,
+            operationId = "create"
     )
     @PostMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<T> create(
@@ -258,7 +260,8 @@ public interface IRAController<T, C, ID> {
                     Updates an existing entity with the provided field values.
                     Implements ra-spring-data-provider's update operation with support for partial updates.
                     Only the fields provided in the request body will be updated.
-                    """
+                    """,
+            operationId = "update"
     )
     @PutMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<T> update(
@@ -280,7 +283,8 @@ public interface IRAController<T, C, ID> {
             description = """
                     Deletes a single entity by its unique identifier.
                     Implements ra-spring-data-provider's delete operation.
-                    """
+                    """,
+            operationId = "delete"
     )
     @DeleteMapping(value = "/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<Void> delete(
@@ -306,7 +310,8 @@ public interface IRAController<T, C, ID> {
                     Updates multiple entities with the same field values in a single operation.
                     Implements ra-spring-data-provider's updateMany operation for bulk updates.
                     Returns a list of updated entity IDs.
-                    """
+                    """,
+            operationId = "updateMany"
     )
     @PutMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<List<ID>> updateMany(
@@ -329,7 +334,8 @@ public interface IRAController<T, C, ID> {
                     Deletes multiple entities in a single operation.
                     Implements ra-spring-data-provider's deleteMany operation for bulk deletions.
                     Returns a list of deleted entity IDs.
-                    """
+                    """,
+            operationId = "deleteMany"
     )
     @DeleteMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     ResponseEntity<List<ID>> deleteMany(

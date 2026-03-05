@@ -5,6 +5,7 @@ import dev.femrek.openapidemo.dto.UserResponseDTO;
 import dev.femrek.openapidemo.service.UserService;
 import dev.femrek.reactadmindataprovider.controller.RAController;
 import dev.femrek.reactadmindataprovider.service.IRAService;
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -20,11 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/openapi/users")
+@RequestMapping("/api/users")
 @CrossOrigin(origins = "*")
 @RequiredArgsConstructor
-@Tag(name = "Resource: User", description = "Controller for handling RA operations with ResponseDTO and PostRequestDTO")
-public class UserController extends RAController<UserResponseDTO, UserCreateDTO, Long> {
+@Tag(name = "Users", description = "Controller for handling RA operations with ResponseDTO and PostRequestDTO")
+public class User1Controller extends RAController<UserResponseDTO, UserCreateDTO, Long> {
     private final UserService userService;
 
     @Override
@@ -46,5 +47,14 @@ public class UserController extends RAController<UserResponseDTO, UserCreateDTO,
     })
     public ResponseEntity<List<Long>> deleteMany(List<Long> id) {
         return super.deleteMany(id);
+    }
+
+    @Override
+    @Operation(
+        summary = "Delete a User by ID",
+        operationId = "customOpIdDeleteUser"
+    )
+    public ResponseEntity<Void> delete(Long id) {
+        return super.delete(id);
     }
 }

@@ -38,7 +38,7 @@ public class RaController extends RAController<ResponseDTO, PostRequestDTO, UUID
             }
 
             @Override
-            public List<ResponseDTO> findAllById(Iterable<UUID> uuids) {
+            public List<ResponseDTO> findAllById(List<UUID> uuids) {
                 return List.of(ResponseDTO.builder()
                         .id(UUID.randomUUID())
                         .title("Sample Title")
@@ -74,7 +74,7 @@ public class RaController extends RAController<ResponseDTO, PostRequestDTO, UUID
             }
 
             @Override
-            public List<UUID> updateMany(Iterable<UUID> uuids, Map<String, Object> fields) {
+            public List<UUID> updateMany(List<UUID> uuids, Map<String, Object> fields) {
                 List<UUID> updatedIds = new ArrayList<>();
                 uuids.forEach(updatedIds::add);
                 return updatedIds;
@@ -85,7 +85,7 @@ public class RaController extends RAController<ResponseDTO, PostRequestDTO, UUID
             }
 
             @Override
-            public List<UUID> deleteMany(Iterable<UUID> uuids) {
+            public List<UUID> deleteMany(List<UUID> uuids) {
                 List<UUID> deletedIds = new ArrayList<>();
                 uuids.forEach(deletedIds::add);
                 return deletedIds;
